@@ -1,0 +1,187 @@
+{% load static %}
+{% load widget_tweaks %}
+{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Authentication</title>
+
+  <!-- Tailwind -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-image: url("{% static 'images/bg-login.jpg' %}");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+  </style>
+</head>
+
+<body class="flex items-center justify-center min-h-screen px-4">
+  <div
+    class="bg-white/80 backdrop-blur-md shadow-2xl rounded-3xl p-8 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl">
+
+    <!-- Header -->
+    <div class="text-center mb-6">
+      <h2 class="text-3xl font-semibold text-gray-800">Welcome</h2>
+      <p class="text-sm text-gray-600">Sign in or create a new account</p>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    {% for message in messages %}
+    <div class="mb-4 px-4 py-2 rounded bg-{{ message.tags }}-100 text-{{ message.tags }}-700">
+      {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- 🔐 Login Form -->
+    <form method="POST" id="loginForm" class="space-y-4">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="login">
+
+      <a href="{% provider_login_url 'google' %}"
+        class="w-full flex items-center justify-center border border-gray-300 hover:bg-gray-100 text-gray-700 font-medium py-2 rounded-xl mb-6 transition duration-300">
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5 mr-3" />
+        Sign in with Google
+      </a>
+
+      {% if login_form.errors %}
+      <div class="text-sm text-red-600 bg-red-100 rounded p-2">
+        {{ login_form.errors }}
+      </div>
+      {% endif %}
+
+      <div>
+        <label class="text-sm font-medium text-gray-700">Email</label>
+        {{ login_form.username|add_class:"w-full px-4 py-2 border border-gray-300 rounded-xl" }}
+      </div>
+
+      <div class="relative">
+        <label class="text-sm font-medium text-gray-700">Password</label>
+        {{ login_form.password|add_class:"w-full px-4 py-2 border border-gray-300 rounded-xl pr-10" }}
+        <i class="fa-solid fa-eye absolute top-9 right-4 text-gray-500 cursor-pointer"
+          onclick="togglePassword('id_password', this)"></i>
+      </div>
+
+      <button type="submit"
+        class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-400 text-white font-semibold rounded-xl hover:shadow-lg transition">
+        Sign In
+      </button>
+      <div class="flex justify-center mt-4">
+        <a href="{% url 'password_reset' %}" class="text-sm text-pink-600 font-medium hover:underline hover:text-pink-800 transition">
+          <i class="fas fa-unlock-alt mr-1"></i> Forgot password?
+        </a>
+      </div>
+      <div class="flex justify-center mt-4 text-sm text-gray-700 flex-wrap">
+        No account
+        <a id="showRegister" href="#"
+          class="ml-1 text-pink-600 font-medium hover:underline hover:text-pink-800 transition">
+          Create account
+        </a>
+      </div>
+
+    </form>
+
+    <!-- 📝 Register Form -->
+    <form method="POST" id="registerForm" class="space-y-4 hidden">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="register">
+
+      {% if register_form.errors %}
+      <div class="text-sm text-red-600 bg-red-100 rounded p-2">
+        {{ register_form.errors }}
+      </div>
+      {% endif %}
+
+      <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+        <div class="flex-1">
+          <label class="text-sm font-medium text-gray-700">First Name</label>
+          {{ register_form.first_name|add_class:"w-full px-4 py-2 border border-gray-300 rounded-xl" }}
+        </div>
+        <div class="flex-1">
+          <label class="text-sm font-medium text-gray-700">Last Name</label>
+          {{ register_form.last_name|add_class:"w-full px-4 py-2 border border-gray-300 rounded-xl" }}
+        </div>
+      </div>
+
+      <div>
+        <label class="text-sm font-medium text-gray-700">Username</label>
+        {{ register_form.username|add_class:"w-full px-4 py-2 border border-gray-300 rounded-xl" }}
+      </div>
+
+      <div>
+        <label class="text-sm font-medium text-gray-700">Email</label>
+        {{ register_form.email|add_class:"w-full px-4 py-2 border border-gray-300 rounded-xl" }}
+      </div>
+
+      <div>
+        <label class="text-sm font-medium text-gray-700">User Type</label>
+        {{ register_form.user_type|add_class:"w-full px-4 py-2 border border-gray-300 rounded-xl" }}
+      </div>
+
+      <div class="relative">
+        <label class="text-sm font-medium text-gray-700">Password</label>
+        {{ register_form.password1|add_class:"w-full px-4 py-2 border border-gray-300 rounded-xl pr-10" }}
+        <i class="fa-solid fa-eye absolute top-9 right-4 text-gray-500 cursor-pointer"
+          onclick="togglePassword('id_password1', this)"></i>
+      </div>
+
+      <div class="relative">
+        <label class="text-sm font-medium text-gray-700">Confirm Password</label>
+        {{ register_form.password2|add_class:"w-full px-4 py-2 border border-gray-300 rounded-xl pr-10" }}
+        <i class="fa-solid fa-eye absolute top-9 right-4 text-gray-500 cursor-pointer"
+          onclick="togglePassword('id_password2', this)"></i>
+        <p class="text-xs text-gray-600 mt-1">Use 12 or more characters with a mix of letters, numbers & symbols.</p>
+      </div>
+
+      <button type="submit"
+        class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-400 text-white font-semibold rounded-xl hover:shadow-lg transition">
+        Create Account
+      </button>
+      <p id="showLogin" class="mt-6 text-center text-sm text-gray-700">Already have an account?
+        <a href="#" class="text-pink-600 font-semibold hover:underline">Sign in</a>
+      </p>
+
+    </form>
+  </div>
+
+  <script>
+    // toggle show/hide password
+    function togglePassword(id, icon) {
+      const input = document.getElementById(id);
+      if (input) {
+        input.type = input.type === "password" ? "text" : "password";
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
+      }
+    }
+
+    // toggle tab
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+
+    document.getElementById('showLogin').onclick = () => {
+      loginForm.classList.remove('hidden');
+      registerForm.classList.add('hidden');
+    };
+
+    document.getElementById('showRegister').onclick = () => {
+      registerForm.classList.remove('hidden');
+      loginForm.classList.add('hidden');
+    };
+  </script>
+</body>
+
+</html>
