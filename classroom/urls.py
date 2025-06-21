@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/classrooms/', views.classroom_list_api, name='api_classrooms'),
     path('accounts/auth/', views.auth_view, name='auth'),
     path('profile-settings/', views.profile_settings, name='profile_settings'),
+    path('veiwe-profile/', views.veiwe_profile, name='veiwe_profile'),
 
 
     # path('choose-role/', views.choose_role_view, name='choose_role'),

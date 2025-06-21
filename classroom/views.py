@@ -27,6 +27,10 @@ from django.contrib.auth.decorators import login_required
 def profile_settings(request):
     return render(request, 'profile_settings.html')
 
+@login_required
+def veiwe_profile(request):
+    return render(request, 'veiwe_profile.html')
+
 @api_view(['GET'])
 def classroom_list_api(request):
     user = request.user
