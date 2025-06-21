@@ -20,6 +20,19 @@ class User(AbstractUser):
     last_login_ip = models.GenericIPAddressField(null=True, blank=True)
     failed_login_attempts = models.IntegerField(default=0)
     account_locked_until = models.DateTimeField(null=True, blank=True)
+    # models.py (User class)
+    profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
+    bio = models.TextField(blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    age = models.PositiveIntegerField(blank=True, null=True)
+    gender = models.CharField(max_length=10, blank=True, null=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
+    facebook = models.URLField(blank=True, null=True)
+    line = models.CharField(max_length=100, blank=True, null=True)
+    teaching_subjects = models.CharField(max_length=200, blank=True, null=True)
+    class_code = models.CharField(max_length=50, blank=True, null=True)
+    classroom_link = models.URLField(blank=True, null=True)
+
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
@@ -44,4 +57,5 @@ class Classroom(models.Model):
             code = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
             if not Classroom.objects.filter(code=code).exists():
                 return code
+
 

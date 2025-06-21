@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect  # ✅ เพิ่มบรรทัดนี้
 from classroom import views  # ✅ อย่าลืม import views ด้วย
+from django.conf import settings  # ✅ เพิ่มบรรทัดนี้
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('auth/', views.auth_view, name='auth_view'),
@@ -27,3 +29,6 @@ urlpatterns = [
     
 ]
 
+# ✅ เพิ่มตรงนี้เข้าไป
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -62,7 +62,7 @@
           <p class="title">Main</p>
           <ul>
             <li>
-              <a href="#">
+              <a href="{% url 'courses_enroll' %}">
                 <i class="icon ph-bold ph-house-simple"></i>
                 <span class="text">Home</span>
               </a>
@@ -129,7 +129,7 @@
         <div class="head hover:bg-gray-100 p-2 rounded-lg transition">
           <a href="{% url 'profile_settings' %}">
             <div class="user-img">
-              <img src="{% static 'images/user.jpg' %}" alt="user" class="rounded-full w-12 h-12 object-cover" />
+              <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}" class="rounded-full w-12 h-12 object-cover" />
             </div>
             </a>
             <div class="user-details">
