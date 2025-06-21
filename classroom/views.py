@@ -24,7 +24,12 @@ from django.contrib.auth.decorators import login_required
 # views.py
 # classroom/views.py
 
+
+from django.shortcuts import render, redirect
+from django.core.files.storage import FileSystemStorage
+=======
 from .forms import ProfileUpdateForm
+
 
 @login_required
 def profile_settings(request):
@@ -288,6 +293,66 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'ออกจากระบบแล้ว')
     return redirect('auth_view')
+
+
+def upload_lesson_file(request):
+    if request.method == 'POST' and request.FILES.get('lesson_file'):
+        uploaded_file = request.FILES['lesson_file']
+        if uploaded_file.size > 10 * 1024 * 1024:  # > 10MB
+            return render(request, 'create_upload_image.html', {'error': 'File size must be under 10MB.'})
+        if not uploaded_file.name.lower().endswith(('.pdf')):
+            return render(request, 'create_upload_image.html', {'error': 'Invalid file format.'})
+        fs = FileSystemStorage()
+        fs.save(uploaded_file.name, uploaded_file)
+        return redirect('success_page')
+    return render(request, 'create_upload_image.html')
+
+
+def upload_lesson_file_video(request):
+    if request.method == 'POST' and request.FILES.get('lesson_file'):
+        uploaded_file = request.FILES['lesson_file']
+        if uploaded_file.size > 10 * 1024 * 1024:  # > 10MB
+            return render(request, 'create_upload_video.html', {'error': 'File size must be under 10MB.'})
+        if not uploaded_file.name.lower().endswith(('.pdf')):
+            return render(request, 'create_upload_video.html', {'error': 'Invalid file format.'})
+        fs = FileSystemStorage()
+        fs.save(uploaded_file.name, uploaded_file)
+        return redirect('success_page')
+    return render(request, 'create_upload_video.html')
+
+def notifications_view(request):
+    notifications = [
+        {
+            'title': 'Update: Teacher Added A New Lesson In Science!',
+            'description': 'Exciting lesson details! Don’t forget to pass the post-lesson quizzes.',
+            'icon': 'fas fa-book-open',
+            'bg_color': 'bg-green-500',
+            'time': 'Just now'
+        },
+        {
+            'title': 'Take the Test: You\'ve Completed The Science Test',
+            'description': 'You did a great job. Keep the momentum going!',
+            'icon': 'fas fa-vial',
+            'bg_color': 'bg-purple-500',
+            'time': 'Just now'
+        },
+        {
+            'title': 'Download: Lesson Download Complete',
+            'description': 'Science lesson download complete.',
+            'icon': 'fas fa-download',
+            'bg_color': 'bg-orange-400',
+            'time': '7 hours ago'
+        },
+        {
+            'title': 'System Notification: Security Check Scheduled',
+            'description': 'Security check planned for Thursday at 2:00 PM.',
+            'icon': 'fas fa-shield-alt',
+            'bg_color': 'bg-red-300',
+            'time': 'Yesterday'
+        },
+        # เพิ่มอีกตามต้องการ
+    ]
+    return render(request, 'notifications.html', {'notifications': notifications})
 
 # urls.py (main project)
 from django.contrib import admin

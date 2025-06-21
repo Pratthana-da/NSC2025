@@ -17,6 +17,9 @@ urlpatterns = [
     path('accounts/auth/', views.auth_view, name='auth'),
     path('profile-settings/', views.profile_settings, name='profile_settings'),
     path('veiwe-profile/', views.veiwe_profile, name='veiwe_profile'),
+    path('create-upload/', views.upload_lesson_file, name='upload_lesson_file'),
+    path('create-upload-video/', views.upload_lesson_file_video, name='upload_lesson_file_video'),
+    path('notifications/', views.notifications_view, name='notifications'),
 
 
     # path('choose-role/', views.choose_role_view, name='choose_role'),
