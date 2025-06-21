@@ -6,6 +6,48 @@ from django.core.exceptions import ValidationError
 from .models import User
 from django.utils import timezone
 import re
+from django import forms
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+class ProfileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'phone', 'age', 'gender', 'country',
+                  'profile_picture', 'bio', 'facebook', 'line',
+                  'teaching_subjects', 'class_code', 'classroom_link']
+
+        widgets = {
+            'bio': forms.Textarea(attrs={'rows': 4, 'class': 'w-full rounded-xl border px-4 py-3 text-sm resize-none'}),
+            'facebook': forms.TextInput(attrs={'class': 'w-full mt-1 rounded-full border px-4 py-2'}),
+            'line': forms.TextInput(attrs={'class': 'w-full mt-1 rounded-full border px-4 py-2'}),
+            # เพิ่ม styling ฟิลด์อื่นๆ ได้ที่นี่
+        }
+
+
+
+class ProfileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = [
+            'first_name', 'last_name', 'email', 'phone', 'age', 'gender', 'country',
+            'bio', 'profile_picture', 'facebook', 'line',
+            'teaching_subjects', 'class_code', 'classroom_link'
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            field.widget.attrs.update({
+                'class': 'w-full mt-1 rounded-full border px-4 py-2'
+            })
+        self.fields['bio'].widget.attrs.update({
+            'class': 'w-full rounded-xl border px-4 py-3 text-sm resize-none',
+            'rows': 4,
+        })
+
+
 
 class SecureUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))

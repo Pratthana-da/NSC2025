@@ -1,134 +1,113 @@
 {% extends "base.html" %}
-{% block title %}Profile Settings{% endblock %}
 {% load static %}
+{% block title %}View Profile{% endblock %}
+
 {% block content %}
+<div class="bg-gray-50 w-full font-poppins text-gray-700 min-h-screen px-6 py-8">
+  <div class="max-w-5xl mx-auto">
 
-<div class="bg-gray-100 font-poppins text-gray-800 min-h-screen">
-
-  <!-- Header -->
-  <div class="bg-gray-900 h-32 w-full"></div>
-
-  <!-- Main White Container -->
-  <div class="bg-white w-full px-6 py-8">
-
-    <!-- ✅ Profile Details -->
+    <!-- ✅ Profile Display -->
     <div class="p-6 mb-6 md:grid md:grid-cols-3 gap-6">
       <div>
         <h2 class="text-lg font-semibold mb-2">Profile Details</h2>
-        <p class="text-sm text-gray-500">You can change your profile details.</p>
+        <p class="text-sm text-gray-500">This is your current profile information.</p>
       </div>
       <div class="md:col-span-2 flex flex-col gap-4">
         <div class="flex gap-8 items-center">
           <div class="flex flex-col items-center gap-2">
-            <img src="https://i.pravatar.cc/100" alt="Profile" class="w-20 h-20 rounded-full object-cover" />
-            <p class="text-xs text-gray-500">This is where people will see your actual face</p>
-          </div>
-          <div class="ml-auto flex gap-2">
-            <button class="bg-gray-800 text-white px-4 py-1.5 rounded-full text-sm hover:bg-gray-700">← Back</button>
-            <button class="bg-gray-800 text-white px-4 py-1.5 rounded-full text-sm hover:bg-gray-700">Share 🔗</button>
+            <img src="{{ user.profile_picture.url|default:'https://i.pravatar.cc/100' }}"
+                 alt="Profile" class="w-20 h-20 rounded-full object-cover" />
+            <p class="text-xs text-gray-500">Current profile picture</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Divider -->
-    <hr class="my-6 border-gray-300" />
     <!-- ✅ Personal Info -->
     <div class="p-6 mb-6 md:grid md:grid-cols-3 gap-6">
       <div>
         <h2 class="text-lg font-semibold mb-2">Personal Info</h2>
-        <p class="text-sm text-gray-500">Change your personal information settings here.</p>
+        <p class="text-sm text-gray-500">Your basic personal details.</p>
       </div>
       <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="text-sm font-medium">Full Name</label>
-          <input type="text" value="Robert Godwin" class="w-full mt-1 rounded-full border px-4 py-2" />
+          <input type="text" value="{{ user.get_full_name }}"
+                 class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-800 cursor-not-allowed shadow-sm"
+                 readonly>
         </div>
         <div>
-          <label class="text-sm font-medium">Email Address</label>
-          <input type="email" value="robertgodwin@gmail.com" class="w-full mt-1 rounded-full border px-4 py-2" />
-        </div>
-        <div>
-          <label class="text-sm font-medium">Phone Number</label>
-          <input type="text" value="+44 (123) 456–9878" class="w-full mt-1 rounded-full border px-4 py-2" />
-        </div>
-        <div>
-          <label class="text-sm font-medium">Age</label>
-          <input type="number" value="26" class="w-full mt-1 rounded-full border px-4 py-2" />
-        </div>
-        <div>
-          <label class="text-sm font-medium">Gender</label>
-          <input type="text" value="Male" class="w-full mt-1 rounded-full border px-4 py-2" />
-        </div>
-        <div>
-          <label class="text-sm font-medium">Country</label>
-          <input type="text" value="Thailand" class="w-full mt-1 rounded-full border px-4 py-2" />
+          <label class="text-sm font-medium">Email</label>
+          <input type="email" value="{{ user.email }}"
+                 class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-800 cursor-not-allowed shadow-sm"
+                 readonly>
         </div>
       </div>
     </div>
 
-    <!-- Divider -->
-    <hr class="my-6 border-gray-300" />
-    <!-- ✅ Public Class Code -->
+    <!-- ✅ Classroom Info -->
     <div class="p-6 mb-6 md:grid md:grid-cols-3 gap-6">
       <div>
-        <h2 class="text-lg font-semibold mb-2">Public Class Code</h2>
-        <p class="text-sm text-gray-500">This is the main profile visible to everyone.</p>
+        <h2 class="text-lg font-semibold mb-2">Classroom Info</h2>
       </div>
       <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="text-sm font-medium">Teaching Subjects</label>
-          <input type="text" value="Science" class="w-full mt-1 rounded-full border px-4 py-2" />
+          <input type="text" value="{{ user.teaching_subjects }}"
+                 class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-800 cursor-not-allowed shadow-sm"
+                 readonly>
         </div>
         <div>
           <label class="text-sm font-medium">Class Code</label>
-          <input type="text" value="XAEA-22" class="w-full mt-1 rounded-full border px-4 py-2" />
+          <input type="text" value="{{ user.class_code }}"
+                 class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-800 cursor-not-allowed shadow-sm"
+                 readonly>
         </div>
         <div class="md:col-span-2">
           <label class="text-sm font-medium">Classroom Link</label>
-          <input type="text" value="https://classroom.google.com/c/Nzg4NDUyODA1?cjc=527gfry5"
-            class="w-full mt-1 rounded-full border px-4 py-2" />
+          <input type="text" value="{{ user.classroom_link }}"
+                 class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-800 cursor-not-allowed shadow-sm"
+                 readonly>
         </div>
       </div>
     </div>
 
-    <!-- Divider -->
-    <hr class="my-6 border-gray-300" />
-    <!-- ✅ Bio Description -->
+    <!-- ✅ Bio -->
     <div class="p-6 mb-6 md:grid md:grid-cols-3 gap-6">
-      <div>
-        <h2 class="text-lg font-semibold mb-2">Bio Description</h2>
-        <p class="text-sm text-gray-500">Tell your story here. Keep it long and interesting!</p>
-      </div>
+      <div><h2 class="text-lg font-semibold mb-2">Bio</h2></div>
       <div class="md:col-span-2">
-        <textarea rows="4" maxlength="300" class="w-full rounded-xl border px-4 py-3 text-sm resize-none">
-slothUI is the one and only design system for intelligent, lazy gen Z people. It’s the most perfect design tool for procrastinators.
-        </textarea>
-        <p class="text-right text-xs text-gray-400 mt-1">300/300</p>
+        <textarea rows="4" readonly
+                  class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-800 cursor-not-allowed shadow-sm">{{ user.bio }}</textarea>
       </div>
     </div>
 
-
-    <!-- Divider -->
-    <hr class="my-6 border-gray-300" />
-    <!-- ✅ Social Media Links -->
+    <!-- ✅ Social Media -->
     <div class="p-6 mb-6 md:grid md:grid-cols-3 gap-6">
       <div>
         <h2 class="text-lg font-semibold mb-2">Social Media Links</h2>
-        <p class="text-sm text-gray-500">Links to your social accounts.</p>
+        <p class="text-sm text-gray-500">Your public contact information.</p>
       </div>
       <div class="md:col-span-2 space-y-4">
         <div>
           <label class="text-sm font-medium">Facebook</label>
-          <input type="text" value="facebook.com/XAEA-22" class="w-full mt-1 rounded-full border px-4 py-2" />
+          <input type="text" value="{{ user.facebook }}"
+                 class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-800 cursor-not-allowed shadow-sm"
+                 readonly>
         </div>
         <div>
           <label class="text-sm font-medium">Line</label>
-          <input type="text" value="line.com/XAEA-22" class="w-full mt-1 rounded-full border px-4 py-2" />
+          <input type="text" value="{{ user.line }}"
+                 class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-800 cursor-not-allowed shadow-sm"
+                 readonly>
         </div>
       </div>
     </div>
+
+    <!-- ✅ Back Button -->
+    <div class="flex justify-end mt-6">
+      <a href="{% url 'profile_settings' %}" class="px-5 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition">Edit Profile</a>
+    </div>
+
   </div>
 </div>
-
 {% endblock %}

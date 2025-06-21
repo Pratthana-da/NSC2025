@@ -21,17 +21,52 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import ClassroomSerializer
 from django.contrib.auth.decorators import login_required
+# views.py
+# classroom/views.py
+
 
 from django.shortcuts import render, redirect
 from django.core.files.storage import FileSystemStorage
+=======
+from .forms import ProfileUpdateForm
+
 
 @login_required
 def profile_settings(request):
-    return render(request, 'profile_settings.html')
+    user = request.user
+    if request.method == 'POST':
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('veiwe_profile')
+    else:
+        form = ProfileUpdateForm(instance=user)
+
+    # ฟิลด์ที่ไม่ต้องแสดงใน Personal Info
+    hidden_fields = [
+        'profile_picture', 'bio', 'facebook', 'line',
+        'teaching_subjects', 'class_code', 'classroom_link'
+    ]
+
+    return render(request, 'profile_settings.html', {
+        'form': form,
+        'hidden_fields': hidden_fields
+    })
+
 
 @login_required
 def veiwe_profile(request):
-    return render(request, 'veiwe_profile.html')
+    form = ProfileUpdateForm(instance=request.user)
+    hidden_fields = [
+        'profile_picture', 'bio', 'facebook', 'line',
+        'teaching_subjects', 'class_code', 'classroom_link'
+    ]
+    return render(request, 'veiwe_profile.html', {
+        'form': form,
+        'user': request.user,
+        'hidden_fields': hidden_fields,
+    })
+
 
 @api_view(['GET'])
 def classroom_list_api(request):
