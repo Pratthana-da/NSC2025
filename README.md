@@ -55,14 +55,14 @@ DATABASE_URL=postgres://USER:PASSWORD@localhost:5432/dssi68
 ### 7. รันโปรเจกต์
 python manage.py runserver
 
-ลงgit
-สร้าง Branch
-git checkout -b feature-upload-pdf
-git add .
-git commit -m "เพิ่มหน้าอัปโหลด PDF"
-git push origin feature-upload-pdf
+###ลงgit
+###สร้าง Branch
+- git checkout -b feature-upload-pdf
+- git add .
+- git commit -m "เพิ่มหน้าอัปโหลด PDF"
+- git push origin feature-upload-pdf
 
 
-ดึงข้อมูล
-git checkout main
-git pull origin main
+###ดึงข้อมูล
+- git checkout main
+- git pull origin main
