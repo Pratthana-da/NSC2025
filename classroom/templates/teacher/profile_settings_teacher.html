@@ -1,0 +1,184 @@
+{% extends "teacher/base_teacher.html" %}
+{% load static %}
+{% block title %}Profile Settings{% endblock %}
+{% block content %}
+
+<div class="bg-gray-50 w-full font-poppins text-gray-700 min-h-screen px-6 py-8">
+    <div class="max-w-5xl mx-auto">
+
+        <!-- ✅ เริ่ม Form -->
+        <form method="POST" enctype="multipart/form-data" class="space-y-10">
+            {% csrf_token %}
+
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-semibold">Profile Settings</h1>
+                <a href="{% url 'veiwe_profile_teacher' %}"
+                    class="px-4 py-2 bg-black text-white rounded-full text-sm flex items-center gap-2">View Profile
+                    →</a>
+            </div>
+
+            <!-- ✅ Profile Details -->
+            <div class="p-6 mb-6 md:grid md:grid-cols-3 gap-6">
+                <div>
+                    <h2 class="text-lg font-semibold mb-2">Profile Details</h2>
+                    <p class="text-sm text-gray-500">You can change your profile details.</p>
+                </div>
+                <div class="md:col-span-2 flex flex-col gap-4">
+                    <div class="flex gap-8 items-center">
+                        <div class="flex flex-col items-center gap-2">
+                            <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}https://i.pravatar.cc/100{% endif %}"
+                                alt="Profile" class="w-20 h-20 rounded-full object-cover" />
+                            <p class="text-xs text-gray-500">This is where people will see your actual face</p>
+                        </div>
+                        <div class="border border-dashed border-gray-300 rounded-lg w-full p-6 text-center">
+                            <p class="text-sm text-gray-500 mb-2">Upload new picture</p>
+
+                            <!-- ✅ ชื่อไฟล์ -->
+                            <p id="file-name" class="text-sm text-gray-600 mb-3 truncate text-center">No file chosen</p>
+
+                            <!-- ✅ ปุ่ม Choose File ตรงกลาง -->
+                            <label for="id_profile_picture"
+                                class="inline-block cursor-pointer file:bg-black bg-black text-white text-sm font-semibold py-2 px-5 rounded-full hover:bg-gray-800 transition">
+                                Choose File
+                            </label>
+
+                            <!-- ✅ input[type="file"] ซ่อน -->
+                            <input type="file" name="profile_picture" id="id_profile_picture"
+                                accept="image/png, image/jpeg" class="hidden" onchange="updateFileName(event)" />
+
+                            {% if form.profile_picture.errors %}
+                            <p class="text-red-600 text-sm mt-2">{{ form.profile_picture.errors }}</p>
+                            {% endif %}
+
+                            <p class="text-xs text-gray-400 mt-2">Supported Format: JPG, PNG (max 10MB)</p>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <hr class="my-6 border-gray-300" />
+
+            <!-- ✅ Personal Info -->
+            <div class="p-6 mb-6 md:grid md:grid-cols-3 gap-6">
+                <div>
+                    <h2 class="text-lg font-semibold mb-2">Personal Info</h2>
+                    <p class="text-sm text-gray-500">Change your personal information settings here.</p>
+                </div>
+                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm font-medium">First Name</label>
+                        {{ form.first_name }}
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium">Last Name</label>
+                        {{ form.last_name }}
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium">Email Address</label>
+                        {{ form.email }}
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium">Phone Number</label>
+                        {{ form.phone }}
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium">Age</label>
+                        {{ form.age }}
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium">Gender</label>
+                        {{ form.gender }}
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium">Country</label>
+                        {{ form.country }}
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Divider -->
+            <hr class="my-6 border-gray-300" />
+            <!-- Public Class Code -->
+            <div class="p-6 mb-6 md:grid md:grid-cols-3 gap-6">
+                <div>
+                    <h2 class="text-lg font-semibold mb-2">Public Class Code</h2>
+                    <p class="text-sm text-gray-500">This is the main profile that will be visible for everyone</p>
+                </div>
+                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm font-medium">Teaching subjects</label>
+                        {{ form.teaching_subjects }}
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium">Class Code</label>
+                        {{ form.class_code }}
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-sm font-medium">Classroom Link</label>
+                        {{ form.classroom_link }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <hr class="my-6 border-gray-300" />
+
+            <!-- ✅ Bio Description -->
+            <div class="p-6 mb-6 md:grid md:grid-cols-3 gap-6">
+                <div>
+                    <h2 class="text-lg font-semibold mb-2">Bio Description</h2>
+                    <p class="text-sm text-gray-500">Tell your story here.</p>
+                </div>
+                <div class="md:col-span-2">
+                    {{ form.bio }}
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <hr class="my-6 border-gray-300" />
+
+            <!-- ✅ Social Media Links -->
+            <div class="p-6 mb-6 md:grid md:grid-cols-3 gap-6">
+                <div>
+                    <h2 class="text-lg font-semibold mb-2">Social Media Links</h2>
+                    <p class="text-sm text-gray-500">Links to your social accounts.</p>
+                </div>
+                <div class="md:col-span-2 space-y-4">
+                    <div>
+                        <label class="text-sm font-medium">Facebook</label>
+                        {{ form.facebook }}
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium">Line</label>
+                        {{ form.line }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- ✅ Action Buttons -->
+            <div class="flex justify-end items-center gap-4 mt-6">
+                <a href="{% url 'class_join_create' %}"
+                    class="px-4 py-2 text-gray-600 hover:text-black border rounded-full">Cancel</a>
+                <button type="submit" class="px-5 py-2 bg-black text-white rounded-full hover:bg-gray-800">Save
+                    Settings</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    function updateFileName(event) {
+        const fileInput = event.target;
+        const fileNameSpan = document.getElementById('file-name');
+        const file = fileInput.files[0];
+        fileNameSpan.textContent = file ? file.name : 'No file chosen';
+    }
+</script>
+
+
+{% endblock %}

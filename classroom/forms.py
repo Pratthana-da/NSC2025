@@ -11,6 +11,15 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+from django import forms
+from .models import Lesson
+
+class LessonUploadForm(forms.ModelForm):
+    class Meta:
+        model = Lesson
+        fields = ['title', 'file']
+
+
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = User

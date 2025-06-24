@@ -1,0 +1,65 @@
+{% extends 'teacher/base_teacher.html' %}
+{% block title %}แดชบอร์ด{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-6 py-16">
+
+  <div class="w-full max-w-lg text-center">
+
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">
+      {% if user.user_type == 'teacher' %}
+        Create Your Class
+      {% else %}
+        Join a Class
+      {% endif %}
+    </h1>
+
+    <p class="text-base text-gray-600 mb-1">
+      {% if user.user_type == 'teacher' %}
+        Fill in the subject name to create your classroom.
+      {% else %}
+        Enter your classroom code below to join.
+      {% endif %}
+    </p>
+
+    <!-- Teacher: Subject Name Form -->
+    {% if user.user_type == 'teacher' %}
+      <form method="post" action="{% url 'classroom_created' %}" class="mt-10 bg-[#f9fafb] rounded-2xl shadow-xl px-8 py-6 border border-gray-200">
+        {% csrf_token %}
+        <label for="subject" class="block text-left text-sm font-medium text-gray-700 mb-2">Subject</label>
+        <div class="flex items-center bg-white border border-gray-300 rounded-full px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-blue-500">
+          <i class="fas fa-book-open text-gray-400 mr-3 text-md"></i>
+          <input type="text" id="subject" name="subject_name" placeholder="e.g. Science" required
+            class="w-full bg-transparent text-gray-800 placeholder-gray-400 focus:outline-none text-sm" />
+        </div>
+        <div class="mt-6">
+          <button type="submit"
+            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm px-6 py-2 rounded-full transition shadow-md hover:shadow-lg">
+            Create
+          </button>
+        </div>
+      </form>
+
+    <!-- Student: Classroom Code Join Form -->
+    {% elif user.user_type == 'student' %}
+      <form method="post" action="{% url 'courses_enroll' %}" class="mt-10 bg-[#f9fafb] rounded-2xl shadow-xl px-8 py-6 border border-gray-200">
+        {% csrf_token %}
+        <label for="classroom_code" class="block text-left text-sm font-medium text-gray-700 mb-2">Classroom Code</label>
+        <div class="flex items-center bg-white border border-gray-300 rounded-full px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-blue-500">
+          <i class="fas fa-key text-gray-400 mr-3 text-md"></i>
+          <input type="text" id="classroom_code" name="classroom_code" placeholder="e.g. ABC123" required
+            class="w-full bg-transparent text-gray-800 placeholder-gray-400 focus:outline-none text-sm" />
+        </div>
+        <div class="mt-6">
+          <button type="submit"
+            class="w-full bg-green-600 hover:bg-green-700 text-white font-medium text-sm px-6 py-2 rounded-full transition shadow-md hover:shadow-lg">
+            Join
+          </button>
+        </div>
+      </form>
+    {% endif %}
+
+  </div>
+
+</div>
+{% endblock %}

@@ -15,15 +15,18 @@ urlpatterns = [
     path('courses-enrolled/', views.join_classroom, name='courses_enrolled'),
     path('api/classrooms/', views.classroom_list_api, name='api_classrooms'),
     path('accounts/auth/', views.auth_view, name='auth'),
-    path('profile-settings/', views.profile_settings, name='profile_settings'),
-    path('veiwe-profile/', views.veiwe_profile, name='veiwe_profile'),
+    path('student/profile-settings-student/', views.profile_settings_student, name='profile_settings_student'),
+    path('veiwe-profile-student/', views.veiwe_profile_student, name='veiwe_profile_student'),
+    path('profile-settings-teacher/', views.profile_settings_teacher, name='profile_settings_teacher'),
+    path('veiwe-profile-teacher/', views.veiwe_profile_teacher, name='veiwe_profile_teacher'),
     path('create-upload/', views.upload_lesson_file, name='upload_lesson_file'),
     path('create-upload-video/', views.upload_lesson_file_video, name='upload_lesson_file_video'),
     path('notifications/', views.notifications_view, name='notifications'),
+    path('detail-lesson/', views.detail_lesson, name='detail_lesson'),
+    path('final/', views.final, name='final'),
 
 
     # path('choose-role/', views.choose_role_view, name='choose_role'),
-
     path('password_reset/', auth_views.PasswordResetView.as_view(template_name='password_reset_form.html'),name='password_reset'),
     path('password_reset_done/', auth_views.PasswordChangeDoneView.as_view(template_name='password_reset_done.html'),name='password_reset_done'),
     path('password_reset_confirm/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='password_reset_confirm.html'),name='password_reset_confirm'),

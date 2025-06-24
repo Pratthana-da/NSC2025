@@ -1,0 +1,193 @@
+{% extends 'teacher/base_teacher.html' %}
+{% load static %}
+{% block title %}Lesson Detail{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-10 space-y-10">
+
+    <!-- Lesson Header -->
+    <h1 class="text-2xl font-bold text-gray-800">Detail Lesson</h1>
+
+    <!-- Flipbook Frame -->
+    <div class="relative bg-black rounded-[20px] w-full h-[600px] overflow-hidden shadow-lg">
+        <div class="absolute inset-4 bg-white rounded-[16px] grid grid-cols-2 overflow-hidden">
+            <div class="relative flex items-end justify-center p-4 border-r border-gray-300">
+                <p class="bg-gray-600 text-white text-sm px-4 py-2 rounded-md max-w-[90%] text-center shadow-lg">
+                    ในป่าลึก มีเจ้ากบตัวหนึ่งชื่อ “ต๊อกแต๊ก” ที่ชอบเล่นน้ำทั้งวัน ไม่ชอบเรียนรู้เหมือนเพื่อนกบตัวอื่น
+                </p>
+            </div>
+            <div class="relative flex items-end justify-center p-4">
+                <p class="bg-gray-600 text-white text-sm px-4 py-2 rounded-md max-w-[90%] text-center shadow-lg">
+                    วันหนึ่ง ครูเต่าประกาศว่าจะมีการแข่งขัน “กบน้อยนักประดิษฐ์” ต้องสร้างสะพานข้ามบ่อเพื่อนๆ
+                    ต๊อกแต๊กก็นึกในใจว่า “ฉันจะโดดเข้าร่วมมันเอง!”
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player Control -->
+    <div class="flex items-center justify-between text-gray-600 text-sm mt-4">
+        <button class="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow hover:bg-gray-100 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z" />
+            </svg>
+        </button>
+        <div class="flex items-center gap-3">
+            <span class="text-gray-700 font-medium">01:00</span>
+            <button class="flex items-center justify-center w-9 h-9 rounded-full bg-white shadow hover:bg-gray-100 transition" id="mute-btn">
+                <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a9 9 0 010 12.73" />
+                </svg>
+                <svg id="icon-sound-off" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 14M15 5l-7 14" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Lesson Metadata Form -->
+    <form id="lesson-form" class="space-y-6">
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Lesson Name</label>
+            <input id="lesson-name" type="text" class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3" placeholder="Enter lesson name">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Creator</label>
+            <input id="lesson-creator" type="text" class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3" placeholder="Creator name">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Description</label>
+            <textarea id="lesson-description" class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3" placeholder="Lesson description"></textarea>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Additional Content</label>
+            <textarea id="lesson-additional" class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3" placeholder="Additional content"></textarea>
+        </div>
+    </form>
+
+    <!-- Post Test Assignment -->
+    <h3 class="text-xl font-bold text-gray-800 mt-10">Post Test Assignment</h3>
+    <div id="question-container" class="space-y-6 mt-6"></div>
+    <div class="flex justify-center mt-6">
+        <button id="add-question-btn" type="button" class="px-6 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700 transition">
+            + Add your own
+        </button>
+    </div>
+
+    <!-- Upload Buttons -->
+    <div class="mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
+        <button class="w-full sm:w-64 px-6 py-3 rounded-xl bg-gray-800 text-white hover:bg-gray-700 transition">
+            Cancel
+        </button>
+        <a id="upload-btn" href="{% url 'final' %}" class="w-full sm:w-64 px-6 py-3 rounded-xl bg-gray-300 text-gray-700 cursor-not-allowed transition pointer-events-none text-center">
+            Upload Work
+        </a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const container = document.getElementById('question-container');
+        const addBtn = document.getElementById('add-question-btn');
+        const uploadBtn = document.getElementById('upload-btn');
+        const maxQuestions = 10;
+
+        function createQuestion(index = 0) {
+            const el = document.createElement('div');
+            el.className = 'border-2 border-dashed border-blue-400 p-5 rounded-md relative bg-white question-item';
+
+            el.innerHTML = `
+                <button class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-lg remove-btn" title="Remove">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+                <div class="mb-4">
+                  <label class="text-sm font-medium text-gray-700 block mb-1">Question ${index + 1}</label>
+                  <input type="text" class="w-full border border-dashed border-gray-300 px-4 py-2 rounded-md" placeholder="Enter your question..." />
+                </div>
+                <div class="space-y-2">
+                  ${[1, 2, 3, 4].map(i => `
+                    <label class="flex items-center gap-2 border border-dashed border-gray-300 px-4 py-2 rounded-md">
+                      <input type="radio" name="q-${index}" class="accent-blue-500" />
+                      <input type="text" class="w-full text-sm focus:outline-none" placeholder="Choice ${i}" />
+                    </label>
+                  `).join('')}
+                </div>
+            `;
+            return el;
+        }
+
+        function refreshNumbers() {
+            const items = container.querySelectorAll('.question-item');
+            items.forEach((el, idx) => {
+                const label = el.querySelector('label');
+                if (label) label.textContent = `Question ${idx + 1}`;
+                const radios = el.querySelectorAll('input[type="radio"]');
+                radios.forEach(r => r.name = `q-${idx}`);
+            });
+        }
+
+        function isValidQuestion(questionDiv) {
+            const inputs = questionDiv.querySelectorAll('input[type="text"]');
+            const question = inputs[0]?.value.trim();
+            const choices = Array.from(inputs).slice(1);
+            const nonEmptyChoices = choices.filter(i => i.value.trim() !== '');
+            return question && nonEmptyChoices.length >= 2;
+        }
+
+        function validateForm() {
+            const name = document.getElementById('lesson-name').value.trim();
+            const creator = document.getElementById('lesson-creator').value.trim();
+            const questions = document.querySelectorAll('.question-item');
+            const validQuestions = Array.from(questions).every(isValidQuestion);
+            return name && creator && questions.length > 0 && validQuestions;
+        }
+
+        function toggleUploadButton() {
+            if (validateForm()) {
+                uploadBtn.disabled = false;
+                uploadBtn.classList.remove('bg-gray-300', 'text-gray-700', 'cursor-not-allowed', 'pointer-events-none');
+                uploadBtn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
+            } else {
+                uploadBtn.disabled = true;
+                uploadBtn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
+                uploadBtn.classList.add('bg-gray-300', 'text-gray-700', 'cursor-not-allowed', 'pointer-events-none');
+            }
+        }
+
+        addBtn.addEventListener('click', () => {
+            if (container.children.length < maxQuestions) {
+                const q = createQuestion(container.children.length);
+                container.appendChild(q);
+                refreshNumbers();
+                toggleUploadButton();
+            } else {
+                alert("You can add up to 10 questions only.");
+            }
+        });
+
+        container.addEventListener('click', e => {
+            if (e.target.closest('.remove-btn')) {
+                e.target.closest('.question-item').remove();
+                refreshNumbers();
+                toggleUploadButton();
+            }
+        });
+
+        document.addEventListener('input', toggleUploadButton);
+        document.addEventListener('click', () => setTimeout(toggleUploadButton, 100));
+    });
+</script>
+
+<script>
+    const btn = document.getElementById('mute-btn');
+    const iconOn = document.getElementById('icon-sound-on');
+    const iconOff = document.getElementById('icon-sound-off');
+
+    btn.addEventListener('click', () => {
+        iconOn.classList.toggle('hidden');
+        iconOff.classList.toggle('hidden');
+    });
+</script>
+
+{% endblock %}

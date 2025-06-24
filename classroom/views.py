@@ -27,18 +27,44 @@ from django.contrib.auth.decorators import login_required
 
 from django.shortcuts import render, redirect
 from django.core.files.storage import FileSystemStorage
-=======
 from .forms import ProfileUpdateForm
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .forms import LessonUploadForm
+from .models import Lesson
+# views.py
+from django.shortcuts import render
+
+def detail_lesson(request):
+    return render(request, 'teacher/detail_lesson.html')
+
+def final(request):
+    return render(request, 'teacher/final.html')
+
+# @login_required
+# def upload_lesson_file(request):
+#     if request.method == 'POST':
+#         form = LessonUploadForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             lesson = form.save(commit=False)
+#             lesson.user = request.user
+#             lesson.save()
+#             return redirect('lesson_detail', lesson_id=lesson.id)
+#     else:
+#         form = LessonUploadForm()
+#     return render(request, 'teacher/upload.html', {'form': form})
+
 
 
 @login_required
-def profile_settings(request):
+def profile_settings_teacher(request):
     user = request.user
     if request.method == 'POST':
         form = ProfileUpdateForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.save()
-            return redirect('veiwe_profile')
+            return redirect('teacher/veiwe_profile_teacher')
     else:
         form = ProfileUpdateForm(instance=user)
 
@@ -48,20 +74,54 @@ def profile_settings(request):
         'teaching_subjects', 'class_code', 'classroom_link'
     ]
 
-    return render(request, 'profile_settings.html', {
+    return render(request, 'teacher/profile_settings_teacher.html', {
         'form': form,
         'hidden_fields': hidden_fields
     })
 
 
 @login_required
-def veiwe_profile(request):
+def veiwe_profile_teacher(request):
     form = ProfileUpdateForm(instance=request.user)
     hidden_fields = [
         'profile_picture', 'bio', 'facebook', 'line',
         'teaching_subjects', 'class_code', 'classroom_link'
     ]
-    return render(request, 'veiwe_profile.html', {
+    return render(request, 'teacher/veiwe_profile_teacher.html', {
+        'form': form,
+        'user': request.user,
+        'hidden_fields': hidden_fields,
+    })
+
+@login_required
+def profile_settings_student(request):
+    user = request.user
+    if request.method == 'POST':
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('student/profile_settings_student')  # ✅ redirect กลับมา path ของ student
+    else:
+        form = ProfileUpdateForm(instance=user)
+
+    hidden_fields = [
+        'profile_picture', 'bio', 'facebook', 'line',
+        'teaching_subjects', 'class_code', 'classroom_link'
+    ]
+
+    return render(request, 'student/profile_settings_student.html', {
+        'form': form,
+        'hidden_fields': hidden_fields
+    })
+
+@login_required
+def veiwe_profile_student(request):
+    form = ProfileUpdateForm(instance=request.user)
+    hidden_fields = [
+        'profile_picture', 'bio', 'facebook', 'line',
+        'teaching_subjects', 'class_code', 'classroom_link'
+    ]
+    return render(request, 'student/veiwe_profile_student.html', {
         'form': form,
         'user': request.user,
         'hidden_fields': hidden_fields,
@@ -166,7 +226,7 @@ def dashboard(request):
     else:
         classrooms = Classroom.objects.none()
 
-    return render(request, 'class_join_create.html', {
+    return render(request, 'teacher/class_join_create.html', {
         'classrooms': classrooms
     })
 
@@ -178,7 +238,7 @@ def dashboard_view(request):
     if request.user.user_type == 'admin':
         return redirect('admin_dashboard')
     
-    return render(request, 'class_join_create.html', {
+    return render(request, 'teacher/class_join_create.html', {
         'user': request.user,
         'classrooms': request.user.enrolled_classes.filter(is_approved=True) if request.user.user_type == 'student' else request.user.teaching_classes.filter(is_approved=True)
     })
@@ -236,7 +296,7 @@ def create_classroom(request):
             messages.success(request, f'สร้างชั้นเรียน "{subject_name}" สำเร็จ')
             return redirect('classroom_created')  # ✅ กลับมาหน้าเดิม
 
-    return render(request, 'classroom_created.html', {
+    return render(request, 'teacher/classroom_created.html', {
         'classrooms': classrooms  # ✅ ส่งข้อมูลไปให้ template
     })
 
@@ -270,7 +330,7 @@ def join_classroom(request):
     else:
         form = JoinClassroomForm()
     
-    return render(request, 'courses_enroll.html', {
+    return render(request, 'student/courses_enroll.html', {
         'form': form,
         'classrooms': classrooms  # ✅ ส่งข้อมูลคลาสเข้าร่วมไปยัง template
     })
@@ -285,7 +345,7 @@ def classroom_home(request, classroom_id):
         messages.error(request, 'คุณไม่มีสิทธิ์เข้าถึงชั้นเรียนนี้')
         return redirect('class_join_create')
     
-    return render(request, 'classroom_home.html', {'classroom': classroom})
+    return render(request, 'teacher/classroom_home.html', {'classroom': classroom})
 
 @login_required
 def logout_view(request):
@@ -293,20 +353,6 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'ออกจากระบบแล้ว')
     return redirect('auth_view')
-
-
-def upload_lesson_file(request):
-    if request.method == 'POST' and request.FILES.get('lesson_file'):
-        uploaded_file = request.FILES['lesson_file']
-        if uploaded_file.size > 10 * 1024 * 1024:  # > 10MB
-            return render(request, 'create_upload_image.html', {'error': 'File size must be under 10MB.'})
-        if not uploaded_file.name.lower().endswith(('.pdf')):
-            return render(request, 'create_upload_image.html', {'error': 'Invalid file format.'})
-        fs = FileSystemStorage()
-        fs.save(uploaded_file.name, uploaded_file)
-        return redirect('success_page')
-    return render(request, 'create_upload_image.html')
-
 
 def upload_lesson_file_video(request):
     if request.method == 'POST' and request.FILES.get('lesson_file'):
@@ -319,6 +365,19 @@ def upload_lesson_file_video(request):
         fs.save(uploaded_file.name, uploaded_file)
         return redirect('success_page')
     return render(request, 'create_upload_video.html')
+
+def upload_lesson_file(request):
+    if request.method == 'POST' and request.FILES.get('lesson_file'):
+        uploaded_file = request.FILES['lesson_file']
+        if uploaded_file.size > 10 * 1024 * 1024:  # > 10MB
+            return render(request, 'create_upload_image.html', {'error': 'File size must be under 10MB.'})
+        if not uploaded_file.name.lower().endswith(('.pdf')):
+            return render(request, 'create_upload_image.html', {'error': 'Invalid file format.'})
+        fs = FileSystemStorage()
+        fs.save(uploaded_file.name, uploaded_file)
+        return redirect('success_page')
+    return render(request, 'teacher/create_upload_image.html')
+
 
 def notifications_view(request):
     notifications = [
@@ -352,7 +411,7 @@ def notifications_view(request):
         },
         # เพิ่มอีกตามต้องการ
     ]
-    return render(request, 'notifications.html', {'notifications': notifications})
+    return render(request, 'teacher/notifications.html', {'notifications': notifications})
 
 # urls.py (main project)
 from django.contrib import admin
