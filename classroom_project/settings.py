@@ -15,8 +15,23 @@ import os
 from pathlib import Path
 from django.core.management.utils import get_random_secret_key
 
+
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+
+# แล้วคุณจะสามารถเข้าถึงได้แบบนี้
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
 
 # settings.py
 

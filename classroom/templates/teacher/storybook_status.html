@@ -1,0 +1,34 @@
+{% extends 'teacher/base_teacher.html' %}
+{% block content %}
+<div class="max-w-xl mx-auto py-20 text-center">
+  <h2 class="text-xl font-semibold mb-4">กำลังสร้างนิทาน AI</h2>
+
+  <div class="w-full bg-gray-300 h-4 rounded-full mb-4">
+    <div id="progress-bar" class="bg-blue-600 h-4 rounded-full transition-all" style="width: 0%"></div>
+  </div>
+  <p id="progress-text" class="text-sm text-gray-600">กำลังประมวลผลภาพฉากที่ 0 จาก 20</p>
+
+  <script>
+    const checkUrl = "{% url 'api_storybook_status' storybook.id %}";
+    const redirectUrl = "{% url 'view_storybook' storybook.id %}";
+    let current = 0;
+    let interval = setInterval(() => {
+      fetch(checkUrl)
+        .then(res => res.json())
+        .then(data => {
+          if (data.is_ready) {
+            clearInterval(interval);
+            window.location.href = redirectUrl;
+          } else if (data.is_failed) {
+            document.getElementById('progress-text').innerText = '❌ เกิดข้อผิดพลาด';
+            clearInterval(interval);
+          } else {
+            if (current < 20) current++;
+            document.getElementById('progress-bar').style.width = `${(current / 20) * 100}%`;
+            document.getElementById('progress-text').innerText = `กำลังประมวลผลภาพฉากที่ ${current} จาก 20`;
+          }
+        });
+    }, 5000);
+  </script>
+</div>
+{% endblock %}
