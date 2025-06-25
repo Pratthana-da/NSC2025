@@ -22,13 +22,16 @@ urlpatterns = [
     path('create-upload/', views.upload_lesson_file, name='upload_lesson_file'),
     path('create-upload-video/', views.upload_lesson_file_video, name='upload_lesson_file_video'),
     path('notifications/', views.notifications_view, name='notifications'),
-    path('detail-lesson/', views.detail_lesson, name='detail_lesson'),
+
+    path('storybook/<int:storybook_id>/view/', views.view_storybook, name='detail_lesson'),
     path('final/', views.final, name='final'),
 
+    path('storybook/<int:storybook_id>/status/', views.storybook_status, name='storybook_status'),
+    path('api/storybook-status/<int:storybook_id>/', views.storybook_status_check_api, name='api_storybook_status'),
+    # path('storybook/<int:storybook_id>/view/', views.view_storybook, name='view_storybook'),
 
-    # path('choose-role/', views.choose_role_view, name='choose_role'),
     path('password_reset/', auth_views.PasswordResetView.as_view(template_name='password_reset_form.html'),name='password_reset'),
     path('password_reset_done/', auth_views.PasswordChangeDoneView.as_view(template_name='password_reset_done.html'),name='password_reset_done'),
     path('password_reset_confirm/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='password_reset_confirm.html'),name='password_reset_confirm'),
     path('password_reset_complete', auth_views.PasswordResetCompleteView.as_view(template_name='password_reset_complete.html'),name='password_reset_complete'),   
-]
+] 

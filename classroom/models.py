@@ -74,3 +74,24 @@ class Lesson(models.Model):
 
     def __str__(self):
         return self.title
+    
+
+
+# models.py
+class Storybook(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    file = models.FileField(upload_to='lessons/')
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_ready = models.BooleanField(default=False)
+    is_failed = models.BooleanField(default=False)
+
+class Scene(models.Model):
+    storybook = models.ForeignKey(Storybook, related_name='scenes', on_delete=models.CASCADE)
+    scene_number = models.PositiveIntegerField()
+    text = models.TextField()
+    image_prompt = models.TextField()
+    image_url = models.URLField(max_length=1000, blank=True, null=True)
+
+
+

@@ -35,25 +35,87 @@ from .forms import LessonUploadForm
 from .models import Lesson
 # views.py
 from django.shortcuts import render
+# classroom/views.py
 
-def detail_lesson(request):
-    return render(request, 'teacher/detail_lesson.html')
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Lesson
+from .tasks import process_storybook_async
+from .models import Lesson, Storybook, Scene
+from django.core.serializers.json import DjangoJSONEncoder
+import json
+
+
+@login_required
+def upload_lesson_file(request):
+    if request.method == 'POST':
+        form = LessonUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            lesson = form.save(commit=False)
+            lesson.user = request.user
+
+            uploaded_file = request.FILES['file']
+            filename = uploaded_file.name.rsplit('.', 1)[0]
+            lesson.title = filename
+            lesson.file = uploaded_file
+            lesson.save()
+
+            # ✅ สร้าง Storybook จาก Lesson
+            storybook = Storybook.objects.create(
+                user=request.user,
+                title=lesson.title,
+                file=lesson.file  # ใช้ไฟล์เดียวกัน
+            )
+
+            # ✅ เรียก Celery ทำงาน async
+            process_storybook_async.delay(storybook.id)
+
+            # ✅ redirect ไปหน้า status
+            return redirect('storybook_status', storybook_id=storybook.id)
+
+        else:
+            print("❌ Form Errors:", form.errors)
+    else:
+        form = LessonUploadForm()
+
+    return render(request, 'teacher/create_upload_image.html', {'form': form})
+
+
+
+@login_required
+def storybook_status(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id)
+    return render(request, 'teacher/storybook_status.html', {'storybook': storybook})
+
+@api_view(['GET'])
+def storybook_status_check_api(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id)
+    return Response({'is_ready': storybook.is_ready})
+
+@login_required
+def view_storybook(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
+    scenes = storybook.scenes.order_by('scene_number')
+
+    context = {
+        'storybook': storybook,
+        'scenes': json.dumps(list(scenes.values('scene_number', 'text', 'image_url')), cls=DjangoJSONEncoder)
+    }
+    return render(request, 'teacher/detail_lesson.html', context)
+
+
+
+
+
+
+def detail_lesson(request, lesson_id):
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    return render(request, 'teacher/detail_lesson.html', {'lesson': lesson})
+
 
 def final(request):
     return render(request, 'teacher/final.html')
 
-# @login_required
-# def upload_lesson_file(request):
-#     if request.method == 'POST':
-#         form = LessonUploadForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             lesson = form.save(commit=False)
-#             lesson.user = request.user
-#             lesson.save()
-#             return redirect('lesson_detail', lesson_id=lesson.id)
-#     else:
-#         form = LessonUploadForm()
-#     return render(request, 'teacher/upload.html', {'form': form})
 
 
 
@@ -358,25 +420,25 @@ def upload_lesson_file_video(request):
     if request.method == 'POST' and request.FILES.get('lesson_file'):
         uploaded_file = request.FILES['lesson_file']
         if uploaded_file.size > 10 * 1024 * 1024:  # > 10MB
-            return render(request, 'create_upload_video.html', {'error': 'File size must be under 10MB.'})
+            return render(request, 'teacher/create_upload_video.html', {'error': 'File size must be under 10MB.'})
         if not uploaded_file.name.lower().endswith(('.pdf')):
-            return render(request, 'create_upload_video.html', {'error': 'Invalid file format.'})
+            return render(request, 'teacher/create_upload_video.html', {'error': 'Invalid file format.'})
         fs = FileSystemStorage()
         fs.save(uploaded_file.name, uploaded_file)
         return redirect('success_page')
-    return render(request, 'create_upload_video.html')
+    return render(request, 'teacher/create_upload_video.html')
 
-def upload_lesson_file(request):
-    if request.method == 'POST' and request.FILES.get('lesson_file'):
-        uploaded_file = request.FILES['lesson_file']
-        if uploaded_file.size > 10 * 1024 * 1024:  # > 10MB
-            return render(request, 'create_upload_image.html', {'error': 'File size must be under 10MB.'})
-        if not uploaded_file.name.lower().endswith(('.pdf')):
-            return render(request, 'create_upload_image.html', {'error': 'Invalid file format.'})
-        fs = FileSystemStorage()
-        fs.save(uploaded_file.name, uploaded_file)
-        return redirect('success_page')
-    return render(request, 'teacher/create_upload_image.html')
+# def upload_lesson_file(request):
+#     if request.method == 'POST' and request.FILES.get('lesson_file'):
+#         uploaded_file = request.FILES['lesson_file']
+#         if uploaded_file.size > 10 * 1024 * 1024:  # > 10MB
+#             return render(request, 'teacher/create_upload_image.html', {'error': 'File size must be under 10MB.'})
+#         if not uploaded_file.name.lower().endswith(('.pdf')):
+#             return render(request, 'teacher/create_upload_image.html', {'error': 'Invalid file format.'})
+#         fs = FileSystemStorage()
+#         fs.save(uploaded_file.name, uploaded_file)
+#         return redirect('success_page')
+#     return render(request, 'teacher/create_upload_image.html')
 
 
 def notifications_view(request):
