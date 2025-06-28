@@ -48,13 +48,12 @@
       <div class="menu-btn">
         <i class="ph-bold ph-caret-left"></i>
       </div>
-      <div class="head">
-        <div class="user-img">
-          <img src="{% static 'images/user.jpg' %}" alt="user" />
+      <div class="flex items-center space-x-4">
+        <div class="user">
+          <img src="{% static 'images/logo.png' %}" alt="user" class="w-11 h-11 object-cover rounded-full" />
         </div>
         <div class="user-details">
-          <p class="title">web developer</p>
-          <p class="name">John Doe</p>
+          <p class="text-xl font-bold text-black whitespace-nowrap">AI STORYBOOK</p>
         </div>
       </div>
       <div class="nav">
@@ -109,13 +108,15 @@
         <div class="head hover:bg-gray-100 p-2 rounded-lg transition">
           <a href="{% url 'profile_settings_student' %}">
             <div class="user-img">
-              <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}" class="rounded-full w-12 h-12 object-cover" />
+              <img
+                src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'images/default.jpg' %}{% endif %}"
+                class="rounded-full w-12 h-12 object-cover" />
             </div>
-            </a>
-            <div class="user-details">
-              <p class="name font-semibold">{{ user.get_full_name|default:user.username }}</p>
-              <p class="title text-sm text-gray-500">{{ user.get_user_type_display }}</p>
-            </div>
+          </a>
+          <div class="user-details">
+            <p class="name font-semibold">{{ user.get_full_name|default:user.username }}</p>
+            <p class="title text-sm text-gray-500">{{ user.get_user_type_display }}</p>
+          </div>
         </div>
       </div>
     </div>
