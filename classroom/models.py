@@ -13,7 +13,7 @@ class User(AbstractUser):
         ('admin', 'ผู้ดูแลระบบ'),
     )
     
-    user_type = models.CharField(max_length=10, choices=USER_TYPES, default='student')
+    user_type = models.CharField(max_length=10, choices=USER_TYPES, blank=True, null=True)
     email = models.EmailField(unique=True)
     is_approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -67,6 +67,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class Lesson(models.Model):
+    # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name="lessons", null=True, blank=True)  # ✅ เพิ่ม
     title = models.CharField(max_length=255)

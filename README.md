@@ -66,3 +66,7 @@ python manage.py runserver
 ### ดึงข้อมูล
 - git checkout main
 - git pull origin main
+
+### รัน redis
+- redis-server.exe
+- celery -A classroom_project worker --loglevel=info --pool=solo

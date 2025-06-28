@@ -44,6 +44,7 @@ from .tasks import process_storybook_async
 from .models import Lesson, Storybook, Scene
 from django.core.serializers.json import DjangoJSONEncoder
 import json
+from django.contrib.auth import get_backends
 
 from .models import Storybook
 from django.contrib.auth.decorators import login_required
@@ -237,13 +238,43 @@ def get_client_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
+@login_required
+def select_role_view(request):
+    user = request.user
 
+    # ถ้ามี user_type แล้วไม่ต้องเลือกซ้ำ
+    if user.user_type == 'teacher':
+        return redirect('classroom_created')
+    elif user.user_type == 'student':
+        return redirect('courses_enroll')
+
+    if request.method == 'POST':
+        role = request.POST.get('role')
+
+        if role == 'teacher':
+            user.user_type = 'teacher'
+            user.is_approved = True
+            user.save()
+            return redirect('classroom_created')
+
+        elif role == 'student':
+            user.user_type = 'student'
+            user.is_approved = True
+            user.save()
+            return redirect('courses_enroll')
+
+    return render(request, 'select_a_role.html')
 
 @csrf_protect
 @never_cache
 def auth_view(request):
     if request.user.is_authenticated:
-        return redirect('class_join_create')
+        if request.user.user_type == 'teacher':
+            return redirect('classroom_created')
+        elif request.user.user_type == 'student':
+            return redirect('courses_enroll')
+        else:
+            return redirect('select_role')
 
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -253,42 +284,36 @@ def auth_view(request):
             form = SecureAuthenticationForm(request, data=request.POST)
             if form.is_valid():
                 user = form.get_user()
-                user.last_login_ip = get_client_ip(request)
-                user.save()
                 login(request, user)
-                logger.info(f'User {user.email} logged in from IP {get_client_ip(request)}')
-                messages.success(request, 'เข้าสู่ระบบสำเร็จ')
+                logger.info(f'User {user.email} logged in.')
 
-                # ✅ เงื่อนไขหลังล็อกอิน
-                if user.user_type == 'student':
-                    if user.enrolled_classes.exists():
-                        return redirect('courses_enroll')
-                    else:
-                        return redirect('class_join_create')
-
+                # ✅ Redirect based on user_type
+                if not user.user_type:
+                    return redirect('select_role')
                 elif user.user_type == 'teacher':
                     return redirect('classroom_created')
-
+                elif user.user_type == 'student':
+                    return redirect('courses_enroll')
                 else:
-                    return redirect('class_join_create')
+                    return redirect('select_role')
 
             else:
-                logger.warning(f'Failed login attempt from IP {get_client_ip(request)}')
+                logger.warning("❌ Failed login")
                 messages.error(request, 'เข้าสู่ระบบไม่สำเร็จ')
 
         elif action == 'register':
             form = SecureUserCreationForm(request.POST)
             if form.is_valid():
                 user = form.save(commit=False)
-                user.is_approved = user.user_type in ['admin', 'student']
+                user.is_approved = True  # ✅ ไม่ต้องรออนุมัติ
                 user.save()
-                logger.info(f'New user registered: {user.email} ({user.user_type})')
-                if user.user_type in ['admin', 'student']:
-                    login(request, user)
-                    return redirect('class_join_create')
-                else:
-                    messages.success(request, 'สมัครสมาชิกสำเร็จ รอการอนุมัติจากผู้ดูแลระบบ')
-                    return redirect('auth_view')
+                
+                backend = get_backends()[0]
+                user.backend = get_backends()[0].__module__ + "." + get_backends()[0].__class__.__name__
+
+                login(request, user)
+                logger.info(f'✅ New user registered: {user.email}')
+                return redirect('select_role')
             else:
                 print("❌ REGISTER FORM ERRORS:", form.errors)
                 messages.error(request, 'เกิดข้อผิดพลาดในการสมัครสมาชิก')

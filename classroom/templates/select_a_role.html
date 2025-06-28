@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>เลือกบทบาท</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white flex items-center justify-center min-h-screen font-sans">
+
+  <form method="post" action="{% url 'select_role' %}" class="text-center space-y-6">
+    {% csrf_token %}
+
+    <!-- ภาพประกอบ -->
+    <img src="{% static 'images/logo01.png' %}" alt="illustration" class="w-64 mx-auto" />
+
+    <!-- ข้อความ -->
+    <p class="text-gray-800 text-lg font-medium">เพิ่มชั้นเรียนเพื่อเริ่มต้นใช้งาน</p>
+
+    <!-- ปุ่มเลือกบทบาท -->
+    <div id="role-switch" class="relative flex bg-gray-200 rounded-full p-1 mx-auto w-[380px] justify-between">
+
+      <!-- highlight background -->
+      <div id="highlight"
+        class="absolute top-1 left-1 h-[calc(100%-0.5rem)] w-1/2 bg-gray-800 rounded-full transition-all duration-300 ease-in-out z-0"></div>
+
+      <!-- ปุ่มครู -->
+      <button type="submit" name="role" value="teacher"
+        class="relative z-10 px-6 py-2 rounded-full font-semibold text-black min-w-[160px] whitespace-nowrap"
+        data-role="left"
+        onmouseover="moveHighlight(this)">
+        สร้างชั้นเรียน
+      </button>
+
+      <!-- ปุ่มนักเรียน -->
+      <button type="submit" name="role" value="student"
+        class="relative z-10 px-6 py-2 rounded-full font-semibold text-white min-w-[160px] whitespace-nowrap"
+        data-role="right"
+        onmouseover="moveHighlight(this)">
+        เข้าร่วมชั้นเรียน
+      </button>
+    </div>
+  </form>
+
+  <script>
+    const highlight = document.getElementById('highlight');
+    const buttons = document.querySelectorAll('#role-switch button');
+
+    function moveHighlight(button) {
+      const isLeft = button.dataset.role === 'left';
+      highlight.style.left = isLeft ? '0.25rem' : 'calc(50% + 0.25rem)';
+
+      buttons.forEach(btn => {
+        if (btn === button) {
+          btn.classList.remove('text-black');
+          btn.classList.add('text-white');
+        } else {
+          btn.classList.remove('text-white');
+          btn.classList.add('text-black');
+        }
+      });
+    }
+
+    // เรียกครั้งแรกให้ default อยู่ฝั่งขวา
+    window.onload = () => {
+      const defaultBtn = document.querySelector('button[data-role="right"]');
+      moveHighlight(defaultBtn);
+    };
+  </script>
+
+</body>
+</html>

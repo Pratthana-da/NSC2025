@@ -87,6 +87,16 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
+ACCOUNT_ADAPTER = 'classroom.adapters.CustomAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'classroom.adapters.CustomSocialAccountAdapter'
+
+ACCOUNT_USERNAME_REQUIRED = True
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'  # เพราะคุณใช้ AbstractUser
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+
+
+
 # กำหนด protocol ที่ใช้ในลิงก์อีเมล
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"
 
@@ -94,10 +104,10 @@ SITE_ID = 1
 LOGIN_REDIRECT_URL = '/choose-role/'  # ชี้ไปยังหน้าเลือกบทบาทหลังล็อกอิน
 ACCOUNT_LOGOUT_REDIRECT_URL = '/auth/'
 
-# สำหรับอีเมล login
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-ACCOUNT_LOGIN_METHODS = {'email'}
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+# # สำหรับอีเมล login
+# ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+# ACCOUNT_LOGIN_METHODS = {'email'}
+# ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 
 
 CACHES = {
@@ -158,7 +168,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_NAME', 'AI_STORYBOOOK_DB'),
         'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'Suda@04022547'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'Prabenz@34839'),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': os.environ.get('DB_PORT', '5432'),
         },

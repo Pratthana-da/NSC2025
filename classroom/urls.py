@@ -25,8 +25,10 @@ urlpatterns = [
     path('notifications/', views.notifications_view, name='notifications'),
 
 
+
     # path('storybook/<uuid:storybook_id>/view/', views.view_storybook, name='detail_lesson'),
     path('storybook/<int:storybook_id>/view/', views.view_storybook, name='detail_lesson'),
+
 
     path('final/', views.final, name='final'),
 
