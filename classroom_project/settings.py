@@ -156,7 +156,7 @@ WSGI_APPLICATION = 'classroom_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'classroom_db'),
+        'NAME': os.environ.get('DB_NAME', 'AI_STORYBOOOK_DB'),
         'USER': os.environ.get('DB_USER', 'postgres'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'Suda@04022547'),
         'HOST': os.environ.get('DB_HOST', 'localhost'),

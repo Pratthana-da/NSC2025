@@ -19,15 +19,19 @@ urlpatterns = [
     path('veiwe-profile-student/', views.veiwe_profile_student, name='veiwe_profile_student'),
     path('profile-settings-teacher/', views.profile_settings_teacher, name='profile_settings_teacher'),
     path('veiwe-profile-teacher/', views.veiwe_profile_teacher, name='veiwe_profile_teacher'),
-    path('create-upload/', views.upload_lesson_file, name='upload_lesson_file'),
-    path('create-upload-video/', views.upload_lesson_file_video, name='upload_lesson_file_video'),
+    path('classroom/<uuid:classroom_id>/create-upload/', views.upload_lesson_file, name='upload_lesson_file'),
+    path('classroom/<uuid:classroom_id>/create-upload-video/', views.upload_lesson_file_video, name='upload_lesson_file_video'),
+    # path('create-upload-video/', views.upload_lesson_file_video, name='upload_lesson_file_video'),
     path('notifications/', views.notifications_view, name='notifications'),
 
+
+    # path('storybook/<uuid:storybook_id>/view/', views.view_storybook, name='detail_lesson'),
     path('storybook/<int:storybook_id>/view/', views.view_storybook, name='detail_lesson'),
+
     path('final/', views.final, name='final'),
 
     path('storybook/<int:storybook_id>/status/', views.storybook_status, name='storybook_status'),
-    path('api/storybook-status/<int:storybook_id>/', views.storybook_status_check_api, name='api_storybook_status'),
+    path('api/storybook/<int:storybook_id>/status/', views.storybook_status_check_api, name='api_storybook_status'),
     # path('storybook/<int:storybook_id>/view/', views.view_storybook, name='view_storybook'),
 
     path('password_reset/', auth_views.PasswordResetView.as_view(template_name='password_reset_form.html'),name='password_reset'),

@@ -68,6 +68,7 @@ User = get_user_model()
 
 class Lesson(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name="lessons", null=True, blank=True)  # ✅ เพิ่ม
     title = models.CharField(max_length=255)
     file = models.FileField(upload_to='lessons/')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -80,6 +81,7 @@ class Lesson(models.Model):
 # models.py
 class Storybook(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name="storybooks", null=True, blank=True)  # ✅ เพิ่ม
     title = models.CharField(max_length=255)
     file = models.FileField(upload_to='lessons/')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -92,6 +94,8 @@ class Scene(models.Model):
     text = models.TextField()
     image_prompt = models.TextField()
     image_url = models.URLField(max_length=1000, blank=True, null=True)
+    audio_url = models.URLField(max_length=1000, blank=True, null=True)  # ✅ เพิ่ม
+
 
 
 

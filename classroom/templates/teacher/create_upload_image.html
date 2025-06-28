@@ -11,7 +11,7 @@
     </p>
 
     <!-- ✅ Upload Form -->
-    <form id="upload-form" action="{% url 'upload_lesson_file' %}" method="POST" enctype="multipart/form-data"
+    <form id="upload-form" action="{% url 'upload_lesson_file' classroom.id %}" method="POST" enctype="multipart/form-data"
           class="border-2 border-dashed border-blue-300 rounded-xl px-8 py-40 bg-white text-center relative">
         {% csrf_token %}
 

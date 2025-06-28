@@ -45,14 +45,20 @@ from .models import Lesson, Storybook, Scene
 from django.core.serializers.json import DjangoJSONEncoder
 import json
 
+from .models import Storybook
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
 
 @login_required
-def upload_lesson_file(request):
+def upload_lesson_file(request, classroom_id):
+    classroom = get_object_or_404(Classroom, id=classroom_id)
+
     if request.method == 'POST':
         form = LessonUploadForm(request.POST, request.FILES)
         if form.is_valid():
             lesson = form.save(commit=False)
             lesson.user = request.user
+            lesson.classroom = classroom  # 🔹 เชื่อมกับ classroom
 
             uploaded_file = request.FILES['file']
             filename = uploaded_file.name.rsplit('.', 1)[0]
@@ -60,17 +66,18 @@ def upload_lesson_file(request):
             lesson.file = uploaded_file
             lesson.save()
 
-            # ✅ สร้าง Storybook จาก Lesson
+            # ✅ สร้าง Storybook ที่เชื่อมกับ lesson
             storybook = Storybook.objects.create(
                 user=request.user,
+                classroom=classroom,  # 🔹 เพิ่ม relation ถ้ามี field นี้
                 title=lesson.title,
-                file=lesson.file  # ใช้ไฟล์เดียวกัน
+                file=lesson.file
             )
 
             # ✅ เรียก Celery ทำงาน async
             process_storybook_async.delay(storybook.id)
 
-            # ✅ redirect ไปหน้า status
+            # ✅ redirect ไปหน้า status หรือ classroom_home ก็ได้
             return redirect('storybook_status', storybook_id=storybook.id)
 
         else:
@@ -78,19 +85,34 @@ def upload_lesson_file(request):
     else:
         form = LessonUploadForm()
 
-    return render(request, 'teacher/create_upload_image.html', {'form': form})
+    return render(request, 'teacher/create_upload_image.html', {
+        'form': form,
+        'classroom': classroom
+    })
 
 
 
 @login_required
 def storybook_status(request, storybook_id):
-    storybook = get_object_or_404(Storybook, id=storybook_id)
+    storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
     return render(request, 'teacher/storybook_status.html', {'storybook': storybook})
+
 
 @api_view(['GET'])
 def storybook_status_check_api(request, storybook_id):
     storybook = get_object_or_404(Storybook, id=storybook_id)
     return Response({'is_ready': storybook.is_ready})
+
+# @login_required
+# def view_storybook(request, storybook_id):
+#     storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
+#     scenes = storybook.scenes.order_by('scene_number')
+
+#     context = {
+#         'storybook': storybook,
+#         'scenes': json.dumps(list(scenes.values('scene_number', 'text', 'image_url')), cls=DjangoJSONEncoder)
+#     }
+#     return render(request, 'teacher/detail_lesson.html', context)
 
 @login_required
 def view_storybook(request, storybook_id):
@@ -99,11 +121,12 @@ def view_storybook(request, storybook_id):
 
     context = {
         'storybook': storybook,
-        'scenes': json.dumps(list(scenes.values('scene_number', 'text', 'image_url')), cls=DjangoJSONEncoder)
+        'scenes': json.dumps(
+            list(scenes.values('scene_number', 'text', 'image_url', 'audio_url')),
+            cls=DjangoJSONEncoder
+        )
     }
     return render(request, 'teacher/detail_lesson.html', context)
-
-
 
 
 
@@ -401,13 +424,27 @@ def join_classroom(request):
 @login_required
 def classroom_home(request, classroom_id):
     classroom = get_object_or_404(Classroom, id=classroom_id)
-    
-    # Check permissions
+
+    # ตรวจสอบสิทธิ์เข้าถึง
     if request.user != classroom.teacher and request.user not in classroom.students.all():
         messages.error(request, 'คุณไม่มีสิทธิ์เข้าถึงชั้นเรียนนี้')
         return redirect('class_join_create')
-    
-    return render(request, 'teacher/classroom_home.html', {'classroom': classroom})
+
+    # ถ้าเป็นครู → แสดงเฉพาะ storybook ที่ตนสร้าง
+    if request.user == classroom.teacher:
+        storybooks = classroom.storybooks.filter(user=request.user).order_by('-created_at')
+        template_name = 'teacher/classroom_home.html'
+    else:
+        # ถ้าเป็นนักเรียน → เห็นทุก storybook ที่ครูสร้างและสถานะพร้อมแล้ว
+        storybooks = classroom.storybooks.filter(is_ready=True).order_by('-created_at')
+        template_name = 'student/classroom_home.html'
+
+    return render(request, template_name, {
+        'classroom': classroom,
+        'storybooks': storybooks
+    })
+
+
 
 @login_required
 def logout_view(request):
@@ -475,13 +512,13 @@ def notifications_view(request):
     ]
     return render(request, 'teacher/notifications.html', {'notifications': notifications})
 
-# urls.py (main project)
-from django.contrib import admin
-from django.urls import path, include
+# # urls.py (main project)
+# from django.contrib import admin
+# from django.urls import path, include
 
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('classroom.urls')),
-]
+# urlpatterns = [
+#     path('admin/', admin.site.urls),
+#     path('', include('classroom.urls')),
+# ]
 
 

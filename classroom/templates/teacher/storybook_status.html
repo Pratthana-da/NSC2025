@@ -10,7 +10,7 @@
 
   <script>
     const checkUrl = "{% url 'api_storybook_status' storybook.id %}";
-    const redirectUrl = "{% url 'view_storybook' storybook.id %}";
+    const redirectUrl = "{% url 'detail_lesson' storybook.id %}";
     let current = 0;
     let interval = setInterval(() => {
       fetch(checkUrl)
