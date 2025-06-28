@@ -44,7 +44,7 @@
         <p class="text-sm text-gray-600">Hi, I'm {{ classroom.teacher.first_name }}. Let's start learning together.</p>
         <div class="mt-4 flex justify-between text-sm text-indigo-600 font-semibold">
           <span>Lessons</span>
-          <a href="#" class="hover:underline">Enter</a>
+          <a href="{% url 'classroom_home' classroom.id %}" class="hover:underline">Enter</a>
           <!-- <a href="{% url 'classroom_home' classroom.id %}" class="hover:underline">Enter</a> -->
         </div>
       </div>

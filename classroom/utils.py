@@ -1,8 +1,17 @@
 from openai import OpenAI
+from io import BytesIO
 import PyPDF2
 import json
 
 client = OpenAI()
+
+def generate_tts_audio(text, voice="nova"):
+    response = client.audio.speech.create(
+        model="tts-1",
+        voice=voice,
+        input=text,
+    )
+    return response.read()  # bytes
 
 def extract_text_from_pdf(file_path):
     text = ""
