@@ -80,7 +80,8 @@
         Sign In
       </button>
       <div class="flex justify-center mt-4">
-        <a href="{% url 'password_reset' %}" class="text-sm text-pink-600 font-medium hover:underline hover:text-pink-800 transition">
+        <a href="{% url 'password_reset' %}"
+          class="text-sm text-pink-600 font-medium hover:underline hover:text-pink-800 transition">
           <i class="fas fa-unlock-alt mr-1"></i> Forgot password?
         </a>
       </div>
@@ -105,6 +106,12 @@
       </div>
       {% endif %}
 
+      <a href="{% provider_login_url 'google' %}"
+        class="w-full flex items-center justify-center border border-gray-300 hover:bg-gray-100 text-gray-700 font-medium py-2 rounded-xl transition duration-300">
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5 mr-3" />
+        Sign in with Google
+      </a>
+
       <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
         <div class="flex-1">
           <label class="text-sm font-medium text-gray-700">First Name</label>
@@ -126,10 +133,10 @@
         {{ register_form.email|add_class:"w-full px-4 py-2 border border-gray-300 rounded-xl" }}
       </div>
 
-      <div>
+      <!-- <div>
         <label class="text-sm font-medium text-gray-700">User Type</label>
         {{ register_form.user_type|add_class:"w-full px-4 py-2 border border-gray-300 rounded-xl" }}
-      </div>
+      </div> -->
 
       <div class="relative">
         <label class="text-sm font-medium text-gray-700">Password</label>

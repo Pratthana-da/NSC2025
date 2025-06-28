@@ -10,7 +10,6 @@
     <p class="text-gray-500 text-sm">By {{ storybook.user.get_full_name|default:storybook.user.email }}</p>
 
     <!-- Flipbook Frame -->
-    <!-- Flipbook Frame -->
     <div class="relative bg-black rounded-[20px] w-full h-[600px] overflow-hidden shadow-lg">
         <!-- Scene Pages -->
         <div class="absolute inset-4 bg-white rounded-[16px] grid grid-cols-2 overflow-hidden">
@@ -18,7 +17,7 @@
             <div class="relative flex items-end justify-center p-4 border-r border-gray-300">
                 {% if scene.image_url %}
                 <img src="{{ scene.image_url }}" alt="Scene Image"
-                    class="absolute inset-0 w-full h-full object-cover opacity-30">
+                    class="absolute inset-0 w-full h-full object-cover">
                 {% endif %}
                 <p
                     class="bg-gray-600 text-white text-sm px-4 py-2 rounded-md max-w-[90%] text-center shadow-lg relative z-10">
@@ -38,17 +37,6 @@
             ➡
         </button>
     </div>
-
-
-    <!-- Flipbook Control Buttons -->
-    <!-- <div class="absolute bottom-4 right-4 flex gap-3 z-20">
-        <button id="prev-btn" class="px-4 py-2 bg-white text-gray-700 rounded-lg shadow hover:bg-gray-200 transition">
-            ⬅ Prev
-        </button>
-        <button id="next-btn" class="px-4 py-2 bg-white text-gray-700 rounded-lg shadow hover:bg-gray-200 transition">
-            Next ➡
-        </button>
-    </div> -->
 
 
     <!-- Player Control -->

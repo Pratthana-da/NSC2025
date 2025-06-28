@@ -65,11 +65,11 @@ class SecureUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
     first_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
     last_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    user_type = forms.ChoiceField(choices=[('teacher', 'Teacher'), ('student', 'Student')],widget=forms.Select(attrs={'class': 'form-control'}))
+    # user_type = forms.ChoiceField(choices=[('teacher', 'Teacher'), ('student', 'Student')],widget=forms.Select(attrs={'class': 'form-control'}))
     
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name', 'last_name', 'user_type', 'password1', 'password2')
+        fields = ('username', 'email', 'first_name', 'last_name', 'password1', 'password2')
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
         }

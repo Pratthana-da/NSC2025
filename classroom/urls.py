@@ -22,8 +22,9 @@ urlpatterns = [
     path('create-upload/', views.upload_lesson_file, name='upload_lesson_file'),
     path('create-upload-video/', views.upload_lesson_file_video, name='upload_lesson_file_video'),
     path('notifications/', views.notifications_view, name='notifications'),
-
+    path('select-role/', views.select_role_view, name='select_role'),
     path('storybook/<int:storybook_id>/view/', views.view_storybook, name='detail_lesson'),
+    #path('storybook/<int:storybook_id>/view/', views.view_storybook, name='view_storybook'),
     path('final/', views.final, name='final'),
 
     path('storybook/<int:storybook_id>/status/', views.storybook_status, name='storybook_status'),
