@@ -36,7 +36,8 @@ cd DSSI-68
 - .venv\Scripts\activate   
 
 ### 3. ติดตั้ง dependencies
-pip install -r requirements.txt
+- pip freeze > requirements.txt
+- pip install -r requirements.txt
 
 ### 4. ตั้งค่า Environment File
 - สร้างไฟล์ .env แล้วใส่ค่าประมาณนี้:
