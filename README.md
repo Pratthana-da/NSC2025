@@ -96,7 +96,7 @@ git push origin feature-upload-pdf
 
 ### ดึงข้อมูล
 ```
-git checkout mai
+git checkout main
 ```
 ```
 git pull origin main
