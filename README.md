@@ -109,7 +109,7 @@ redis-server.exe
 ```
 celery -A classroom_project worker --loglevel=info --pool=solo
 ```
-### ประมวลผลได้ ทีละ 1 งาน เท่านั้น  pool=solo
+### ประมวลผลได้ ทีละหลายงาน concurrency=4 
 ```
 celery -A classroom_project worker --loglevel=info --concurrency=4
 
