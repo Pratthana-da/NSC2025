@@ -25,6 +25,7 @@ urlpatterns = [
     path('classroom/<uuid:classroom_id>/create-upload/', views.upload_lesson_file, name='upload_lesson_file'),
     path('classroom/<uuid:classroom_id>/create-upload-video/', views.upload_lesson_file_video, name='upload_lesson_file_video'),
     path('notifications/', views.notifications_view, name='notifications'),
+    
 
 
 
@@ -33,7 +34,6 @@ urlpatterns = [
 
     path('student/storybook/<int:storybook_id>/view/', views.student_view_storybook, name='student_display_lesson'),
     path('select-role/', views.select_role_view, name='select_role'),
-
 
 
     path('final/<int:storybook_id>/', views.final, name='final'),
