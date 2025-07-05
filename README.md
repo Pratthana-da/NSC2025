@@ -105,9 +105,22 @@ git pull origin main
 ```
 redis-server.exe
 ```
+### ประมวลผลได้ ทีละ 1 งาน เท่านั้น  pool=solo
 ```
 celery -A classroom_project worker --loglevel=info --pool=solo
 ```
+### ประมวลผลได้ ทีละ 1 งาน เท่านั้น  pool=solo
+```
+celery -A classroom_project worker --loglevel=info --concurrency=4
+
+celery -A classroom_project worker --concurrency=10 --loglevel=info
+
+celery -A classroom_project worker --concurrency=5 --loglevel=info
+# เปิดอีก terminal:
+celery -A classroom_project worker --concurrency=5 --loglevel=info
+
+```
+
 ### ยกเลิกการเปลี่ยนแปลงrequirements.txt
 ```
 git restore requirements.txt
