@@ -37,7 +37,7 @@
                 <p class="text-sm text-gray-500">Created {{ storybook.created_at|date:"d M Y" }}</p>
                 <div class="mt-3 flex justify-between items-center text-sm text-indigo-600 font-medium">
                     <span>{{ storybook.scenes.count }} scenes</span>
-                    <a href="{% url 'detail_lesson' storybook.id %}">View</a>
+                    <a href="{% url 'student_display_lesson' storybook.id %}">View</a>
 
 
                 </div>

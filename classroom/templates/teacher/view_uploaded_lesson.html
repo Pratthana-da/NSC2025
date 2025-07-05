@@ -1,0 +1,266 @@
+{% extends 'teacher/base_teacher.html' %}
+{% load static %}
+{% block title %}Lesson Detail{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-10 space-y-10">
+
+    <!-- Lesson Header -->
+    <h1 class="text-2xl font-bold text-gray-800">{{ storybook.title }}</h1>
+    <p class="text-gray-500 text-sm">By {{ storybook.user.get_full_name|default:storybook.user.email }}</p>
+
+    <!-- Flipbook Frame -->
+    <div class="relative bg-black rounded-[20px] w-full h-[600px] overflow-hidden shadow-lg">
+        <!-- Scene Pages -->
+        <div class="absolute inset-4 bg-white rounded-[16px] grid grid-cols-2 overflow-hidden">
+            {% for scene in scenes|slice:":2" %}
+            <div class="relative flex items-end justify-center p-4 border-r border-gray-300">
+                {% if scene.image_url %}
+                <img src="{{ scene.image_url }}" alt="Scene Image" class="absolute inset-0 w-full h-full object-cover">
+                {% endif %}
+                <div class="relative z-10 flex flex-col items-center space-y-2">
+                    <p class="bg-gray-600 text-white text-sm px-4 py-2 rounded-md max-w-[90%] text-center shadow-lg">
+                        {{ scene.text }}
+                    </p>
+                    {% if scene.audio_url %}
+                    <audio controls src="{{ scene.audio_url }}" class="w-full max-w-xs"></audio>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- ✅ ปุ่ม Prev / Next ติดขอบซ้าย-ขวา กลางแนวตั้ง -->
+        <button id="prev-btn"
+            class="absolute top-1/2 left-0 -translate-y-1/2 px-3 py-2 bg-white text-gray-700 rounded-r-lg shadow hover:bg-gray-200 transition z-30">
+            ⬅
+        </button>
+        <button id="next-btn"
+            class="absolute top-1/2 right-0 -translate-y-1/2 px-3 py-2 bg-white text-gray-700 rounded-l-lg shadow hover:bg-gray-200 transition z-30">
+            ➡
+        </button>
+    </div>
+
+    <!-- Player Control -->
+    <div class="flex items-center justify-between text-gray-600 text-sm mt-4">
+        <button
+            class="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow hover:bg-gray-100 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800" viewBox="0 0 24 24"
+                fill="currentColor">
+                <path d="M8 5v14l11-7z" />
+            </svg>
+        </button>
+        <div class="flex items-center gap-3">
+            <span class="text-gray-700 font-medium">01:00</span>
+            <button id="mute-btn"
+                class="flex items-center justify-center w-9 h-9 rounded-full bg-white shadow hover:bg-gray-100 transition">
+                <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5z" />
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a9 9 0 010 12.73" />
+                </svg>
+                <svg id="icon-sound-off" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800 hidden"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 14M15 5l-7 14" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="flex justify-center mt-6">
+        <button id="Edit-Lesson" type="button"
+            class="w-full sm:w-64 px-6 py-3 rounded-xl bg-gray-800 text-white hover:bg-gray-700 transition">
+            Edit Lesson
+        </button>
+    </div>
+
+
+    <!-- Lesson Metadata Form -->
+    <form id="lesson-form" class="space-y-6">
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Lesson Name</label>
+            <input id="lesson-name" type="text" value="{{ storybook.title }}"
+                class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3"
+                placeholder="Enter lesson name">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Creator</label>
+            <input id="lesson-creator" type="text"
+                value="{{ storybook.user.get_full_name|default:storybook.user.email }}"
+                class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3" placeholder="Creator name">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Description</label>
+            <textarea id="lesson-description" name="description"
+                class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3"
+                placeholder="Description of the lesson">{{ storybook.description }}</textarea>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Additional Content</label>
+            <textarea id="lesson-additional" name="additional_content"
+                class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3"
+                placeholder="Additional Content here">{{ storybook.additional_content }}</textarea>
+        </div>
+
+    </form>
+
+    <!-- 📥 Download Permission Section -->
+    <div class="space-y-2 mt-10">
+        <h3 class="text-lg font-semibold text-gray-900">Downloading</h3>
+        <p class="text-sm text-gray-500">Lesson Recording</p>
+
+        <div class="flex flex-col space-y-4 mt-2">
+            <label class="flex items-start gap-3 cursor-default">
+                <input type="radio" name="download_permission" value="public"
+                    class="accent-blue-600 mt-1 w-4 h-4"
+                    {% if storybook.download_permission == "public" %}checked{% endif %} disabled>
+                <span class="text-gray-800 text-sm leading-5">
+                    <strong>Public</strong><br>
+                    Anyone can download your Lessons
+                </span>
+            </label>
+
+            <label class="flex items-start gap-3 cursor-default">
+                <input type="radio" name="download_permission" value="private"
+                    class="accent-gray-400 mt-1 w-4 h-4"
+                    {% if storybook.download_permission == "private" %}checked{% endif %} disabled>
+                <span class="text-gray-500 text-sm leading-5">
+                    <strong>Public</strong><br>
+                    Anyone can’t download your Lessons
+                </span>
+            </label>
+        </div>
+    </div>
+
+
+
+
+
+
+    <!-- 📋 Post Test Assignment -->
+    <h3 class="text-2xl font-bold text-gray-800 mt-10 mb-6">📋 Post Test Assignment</h3>
+    
+    <div class="space-y-6">
+        {% for q in questions %}
+        <div class="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl p-6 shadow-sm">
+            <div class="flex items-start justify-between mb-3">
+                <p class="text-base font-semibold text-gray-800">Q{{ forloop.counter }}: {{ q.question_text }}</p>
+            </div>
+            <div class="space-y-2 text-sm">
+                <div class="flex items-start gap-2">
+                    <div
+                        class="w-5 h-5 mt-0.5 flex items-center justify-center rounded-full 
+                            {% if q.correct_choice == 1 %}bg-green-100 text-green-600{% else %}bg-gray-100 text-gray-500{% endif %}">
+                        A
+                    </div>
+                    <p class="{% if q.correct_choice == 1 %}text-green-700 font-medium{% else %}text-gray-700{% endif %}">
+                        {{ q.choice_1 }}
+                        {% if q.correct_choice == 1 %}<span class="ml-1"><i class="fas fa-check-circle text-green-500 ml-1"></i></span>{% endif %}
+                    </p>
+                </div>
+                <div class="flex items-start gap-2">
+                    <div
+                        class="w-5 h-5 mt-0.5 flex items-center justify-center rounded-full 
+                            {% if q.correct_choice == 2 %}bg-green-100 text-green-600{% else %}bg-gray-100 text-gray-500{% endif %}">
+                        B
+                    </div>
+                    <p class="{% if q.correct_choice == 2 %}text-green-700 font-medium{% else %}text-gray-700{% endif %}">
+                        {{ q.choice_2 }}
+                        {% if q.correct_choice == 2 %}<span class="ml-1"><i class="fas fa-check-circle text-green-500 ml-1"></i></span>{% endif %}
+                    </p>
+                </div>
+                <div class="flex items-start gap-2">
+                    <div
+                        class="w-5 h-5 mt-0.5 flex items-center justify-center rounded-full 
+                            {% if q.correct_choice == 3 %}bg-green-100 text-green-600{% else %}bg-gray-100 text-gray-500{% endif %}">
+                        C
+                    </div>
+                    <p class="{% if q.correct_choice == 3 %}text-green-700 font-medium{% else %}text-gray-700{% endif %}">
+                        {{ q.choice_3 }}
+                        {% if q.correct_choice == 3 %}<span class="ml-1"><i class="fas fa-check-circle text-green-500 ml-1"></i></span>{% endif %}
+                    </p>
+                </div>
+                <div class="flex items-start gap-2">
+                    <div
+                        class="w-5 h-5 mt-0.5 flex items-center justify-center rounded-full 
+                            {% if q.correct_choice == 4 %}bg-green-100 text-green-600{% else %}bg-gray-100 text-gray-500{% endif %}">
+                        D
+                    </div>
+                    <p class="{% if q.correct_choice == 4 %}text-green-700 font-medium{% else %}text-gray-700{% endif %}">
+                        {{ q.choice_4 }}
+                        {% if q.correct_choice == 4 %}<span class="ml-1"><i class="fas fa-check-circle text-green-500 ml-1"></i></span>{% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-sm text-gray-500 italic">No post-test questions available.</p>
+        {% endfor %}
+    </div>
+
+
+</div>
+
+<!-- JS -->
+
+
+<script>
+    const scenes = {{ scenes| safe }};
+    const container = document.querySelector(".grid.grid-cols-2");
+    let currentIndex = 0;
+
+    function renderScenes(index) {
+        container.innerHTML = "";
+        const left = scenes[index];
+        const right = scenes[index + 1];
+
+        [left, right].forEach((scene) => {
+            const sceneDiv = document.createElement("div");
+            sceneDiv.className = "relative flex items-end justify-center p-4 border-r border-gray-300";
+
+            if (scene) {
+                sceneDiv.innerHTML = `
+                    ${scene.image_url ? `<img src="${scene.image_url}" alt="Scene" class="absolute inset-0 w-full h-full object-cover">` : ''}
+                    <div class="relative z-10 flex flex-col items-center space-y-2">
+                        <p class="bg-gray-600 text-white text-sm px-4 py-2 rounded-md max-w-[90%] text-center shadow-lg">
+                            ${scene.text || ''}
+                        </p>
+                        ${scene.audio_url ? `<audio controls src="${scene.audio_url}" class="w-full max-w-xs"></audio>` : ''}
+                    </div>
+                `;
+            } else {
+                sceneDiv.innerHTML = `<div class="text-gray-400 text-sm italic">Empty Page</div>`;
+            }
+
+            container.appendChild(sceneDiv);
+        });
+    }
+
+    document.getElementById("next-btn")?.addEventListener("click", () => {
+        currentIndex = (currentIndex + 2) % scenes.length;
+        renderScenes(currentIndex);
+    });
+
+    document.getElementById("prev-btn")?.addEventListener("click", () => {
+        currentIndex = (currentIndex - 2 + scenes.length) % scenes.length;
+        renderScenes(currentIndex);
+    });
+
+    renderScenes(0); // Initial render
+</script>
+
+
+<script>
+    const btn = document.getElementById('mute-btn');
+    const iconOn = document.getElementById('icon-sound-on');
+    const iconOff = document.getElementById('icon-sound-off');
+
+    btn.addEventListener('click', () => {
+        iconOn.classList.toggle('hidden');
+        iconOff.classList.toggle('hidden');
+    });
+</script>
+
+{% endblock %}

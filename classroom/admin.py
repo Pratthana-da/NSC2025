@@ -27,20 +27,3 @@ class ClassroomAdmin(admin.ModelAdmin):
     list_filter = ('is_approved', 'created_at')
     search_fields = ('name', 'code', 'teacher__email')
     readonly_fields = ('code', 'created_at')
-
-
-# # ✅ Action และลงทะเบียน ClassroomRequest
-# @admin.action(description='✅ อนุมัติคำขอสร้างห้องเรียน')
-# def approve_selected_classroom_requests(modeladmin, request, queryset):
-#     for classroom_request in queryset:
-#         classroom_request.status = 'approved'
-#         classroom_request.reviewed_by = request.user
-#         classroom_request.reviewed_at = timezone.now()
-#         classroom_request.save()
-
-# @admin.register(ClassroomRequest)
-# class ClassroomRequestAdmin(admin.ModelAdmin):
-#     list_display = ('subject_name', 'teacher', 'status', 'created_at', 'reviewed_by', 'reviewed_at')
-#     list_filter = ('status', 'created_at')
-#     search_fields = ('subject_name', 'teacher__email')
-#     actions = [approve_selected_classroom_requests]

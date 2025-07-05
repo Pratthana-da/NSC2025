@@ -8,7 +8,7 @@
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-3xl font-bold">Courses</h1>
     {% if user.user_type == 'teacher' %}
-    <a href="{% url 'class_join_create' %}"
+    <a href="{% url 'class_create' %}"
       class="flex items-center gap-2 text-sm px-4 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition">
       <span class="text-lg font-bold">+</span>  create classroom
     </a>

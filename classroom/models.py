@@ -88,6 +88,8 @@ class Storybook(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_ready = models.BooleanField(default=False)
     is_failed = models.BooleanField(default=False)
+    is_uploaded = models.BooleanField(default=False)
+    download_permission = models.CharField(max_length=10, choices=[('public', 'Public'), ('private', 'Private')], default='public')
 
 class Scene(models.Model):
     storybook = models.ForeignKey(Storybook, related_name='scenes', on_delete=models.CASCADE)
@@ -96,6 +98,19 @@ class Scene(models.Model):
     image_prompt = models.TextField()
     image_url = models.URLField(max_length=1000, blank=True, null=True)
     audio_url = models.URLField(max_length=1000, blank=True, null=True)  # ✅ เพิ่ม
+
+
+class PostTestQuestion(models.Model):
+    storybook = models.ForeignKey(Storybook, on_delete=models.CASCADE, related_name='questions')
+    question_text = models.TextField()
+
+    choice_1 = models.CharField(max_length=255)
+    choice_2 = models.CharField(max_length=255)
+    choice_3 = models.CharField(max_length=255)
+    choice_4 = models.CharField(max_length=255)
+
+    correct_choice = models.PositiveSmallIntegerField(choices=[(1, 'Choice 1'), (2, 'Choice 2'), (3, 'Choice 3'), (4, 'Choice 4')])
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 
