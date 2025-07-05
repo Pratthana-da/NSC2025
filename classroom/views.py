@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import HttpResponseForbidden, JsonResponse
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
@@ -102,7 +102,14 @@ def storybook_status(request, storybook_id):
 @api_view(['GET'])
 def storybook_status_check_api(request, storybook_id):
     storybook = get_object_or_404(Storybook, id=storybook_id)
-    return Response({'is_ready': storybook.is_ready})
+    total_created = Scene.objects.filter(storybook=storybook).count()
+    return Response({
+        'is_ready': storybook.is_ready,
+        'is_failed': storybook.is_failed,
+        'current_scene': total_created,
+        'total_scenes': 20
+    })
+
 
 # @login_required
 # def view_storybook(request, storybook_id):
@@ -115,20 +122,57 @@ def storybook_status_check_api(request, storybook_id):
 #     }
 #     return render(request, 'teacher/detail_lesson.html', context)
 
-@login_required
-def view_storybook(request, storybook_id):
-    storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
-    scenes = storybook.scenes.order_by('scene_number')
 
+@login_required
+def teacher_view_storybook(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
+
+    scenes = storybook.scenes.order_by('scene_number')
     context = {
         'storybook': storybook,
-        'scenes': json.dumps(
-            list(scenes.values('scene_number', 'text', 'image_url', 'audio_url')),
-            cls=DjangoJSONEncoder
-        )
+        'scenes': json.dumps(list(scenes.values('scene_number', 'text', 'image_url', 'audio_url')), cls=DjangoJSONEncoder)
     }
     return render(request, 'teacher/detail_lesson.html', context)
 
+
+@login_required
+def view_uploaded_lesson(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
+    posttest_questions = PostTestQuestion.objects.filter(storybook=storybook)
+
+    scenes = storybook.scenes.order_by('scene_number')
+    context = {
+        'storybook': storybook,
+        'questions': posttest_questions,
+        'scenes': json.dumps(
+            list(scenes.values('scene_number', 'text', 'image_url', 'audio_url')),
+            cls=DjangoJSONEncoder
+        ),
+    }
+
+    return render(request, 'teacher/view_uploaded_lesson.html', context)
+
+
+
+
+
+@login_required
+def student_view_storybook(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id)
+
+    if request.user not in storybook.classroom.students.all():
+        return HttpResponseForbidden("You do not have permission to view this storybook.")
+
+    scenes = storybook.scenes.order_by('scene_number')
+    context = {
+        'storybook': storybook,
+        'scenes': json.dumps(list(scenes.values('scene_number', 'text', 'image_url', 'audio_url')), cls=DjangoJSONEncoder)
+    }
+    return render(request, 'student/detail_lesson_student.html', context)
+
+def student_display_lesson(request, lesson_id):
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    return render(request, 'teacher/student_display_lesson.html', {'lesson': lesson})
 
 
 
@@ -137,8 +181,8 @@ def detail_lesson(request, lesson_id):
     return render(request, 'teacher/detail_lesson.html', {'lesson': lesson})
 
 
-def final(request):
-    return render(request, 'teacher/final.html')
+# def final(request):
+#     return render(request, 'teacher/final.html')
 
 
 
@@ -150,7 +194,7 @@ def profile_settings_teacher(request):
         form = ProfileUpdateForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.save()
-            return redirect('teacher/veiwe_profile_teacher')
+            return redirect('profile_settings_teacher')
     else:
         form = ProfileUpdateForm(instance=user)
 
@@ -167,13 +211,13 @@ def profile_settings_teacher(request):
 
 
 @login_required
-def veiwe_profile_teacher(request):
+def view_profile_teacher(request):
     form = ProfileUpdateForm(instance=request.user)
     hidden_fields = [
         'profile_picture', 'bio', 'facebook', 'line',
         'teaching_subjects', 'class_code', 'classroom_link'
     ]
-    return render(request, 'teacher/veiwe_profile_teacher.html', {
+    return render(request, 'teacher/view_profile_teacher.html', {
         'form': form,
         'user': request.user,
         'hidden_fields': hidden_fields,
@@ -186,7 +230,7 @@ def profile_settings_student(request):
         form = ProfileUpdateForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.save()
-            return redirect('student/profile_settings_student')  # ✅ redirect กลับมา path ของ student
+            return redirect('profile_settings_student')  # ✅ redirect กลับมา path ของ student
     else:
         form = ProfileUpdateForm(instance=user)
 
@@ -201,13 +245,13 @@ def profile_settings_student(request):
     })
 
 @login_required
-def veiwe_profile_student(request):
+def view_profile_student(request):
     form = ProfileUpdateForm(instance=request.user)
     hidden_fields = [
         'profile_picture', 'bio', 'facebook', 'line',
         'teaching_subjects', 'class_code', 'classroom_link'
     ]
-    return render(request, 'student/veiwe_profile_student.html', {
+    return render(request, 'student/view_profile_student.html', {
         'form': form,
         'user': request.user,
         'hidden_fields': hidden_fields,
@@ -328,15 +372,24 @@ def auth_view(request):
 
 
 @login_required
-def dashboard(request):
+def class_create_teacher(request):
     if request.user.user_type == 'teacher':
         classrooms = Classroom.objects.filter(teacher=request.user)
-    elif request.user.user_type == 'student':
+    else:
+        classrooms = Classroom.objects.none()
+
+    return render(request, 'teacher/class_create.html', {
+        'classrooms': classrooms
+    })
+
+@login_required
+def class_join_student(request):
+    if request.user.user_type == 'student':
         classrooms = request.user.enrolled_classes.all()
     else:
         classrooms = Classroom.objects.none()
 
-    return render(request, 'teacher/class_join_create.html', {
+    return render(request, 'student/class_join.html', {
         'classrooms': classrooms
     })
 
@@ -390,7 +443,7 @@ def admin_dashboard(request):
 def create_classroom(request):
     if request.user.user_type != 'teacher':
         messages.error(request, 'เฉพาะครูเท่านั้นที่สามารถสร้างชั้นเรียนได้')
-        return redirect('class_join_create')
+        return redirect('classroom_created')
 
     # ✅ ดึงชั้นเรียนที่ครูสร้างไว้แล้ว
     classrooms = Classroom.objects.filter(teacher=request.user)
@@ -417,7 +470,7 @@ def create_classroom(request):
 def join_classroom(request):
     if request.user.user_type != 'student':
         messages.error(request, 'เฉพาะนักเรียนเท่านั้นที่สามารถเข้าร่วมชั้นเรียนได้')
-        return redirect('class_join_create')
+        return redirect('courses_enroll')
     
     # ดึงคลาสที่เคยเข้าร่วม
     classrooms = request.user.enrolled_classes.filter(is_approved=True)
@@ -455,12 +508,12 @@ def classroom_home(request, classroom_id):
         messages.error(request, 'คุณไม่มีสิทธิ์เข้าถึงชั้นเรียนนี้')
         return redirect('class_join_create')
 
-    # ถ้าเป็นครู → แสดงเฉพาะ storybook ที่ตนสร้าง
     if request.user == classroom.teacher:
-        storybooks = classroom.storybooks.filter(user=request.user).order_by('-created_at')
+        # ✅ ครูเห็นเฉพาะ Storybook ที่ "ส่งงานแล้ว"
+        storybooks = classroom.storybooks.filter(user=request.user, is_uploaded=True).order_by('-created_at')
         template_name = 'teacher/classroom_home.html'
     else:
-        # ถ้าเป็นนักเรียน → เห็นทุก storybook ที่ครูสร้างและสถานะพร้อมแล้ว
+        # นักเรียนเห็นเฉพาะที่ "พร้อมใช้งาน"
         storybooks = classroom.storybooks.filter(is_ready=True).order_by('-created_at')
         template_name = 'student/classroom_home.html'
 
@@ -468,6 +521,70 @@ def classroom_home(request, classroom_id):
         'classroom': classroom,
         'storybooks': storybooks
     })
+
+
+import json
+from django.contrib import messages
+from .models import Storybook, PostTestQuestion
+
+@login_required
+def final(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
+
+    if request.method == 'POST':
+        # ✅ บันทึก download permission
+        permission = request.POST.get('download_permission', 'public')
+        storybook.download_permission = permission
+
+        # ✅ อัปเดตชื่อเรื่องใหม่ (กรณีมีแก้ไข)
+        title = request.POST.get('title')
+        if title:
+            storybook.title = title
+
+        # ✅ ตั้งค่า is_uploaded
+        storybook.is_uploaded = True
+        storybook.save()
+
+        # ✅ ดึงข้อมูลคำถามแบบทดสอบ
+        questions_json = request.POST.get('questions_json')
+        if questions_json:
+            try:
+                questions_data = json.loads(questions_json)
+
+                for q in questions_data:
+                    PostTestQuestion.objects.create(
+                        storybook=storybook,
+                        question_text=q['question'],
+                        choice_1=q['choices'][0],
+                        choice_2=q['choices'][1],
+                        choice_3=q['choices'][2],
+                        choice_4=q['choices'][3],
+                        correct_choice=q['correct']
+                    )
+            except Exception as e:
+                messages.error(request, f"เกิดข้อผิดพลาดในการบันทึกคำถาม: {str(e)}")
+
+        messages.success(request, "อัปโหลดสำเร็จ!")
+        return redirect('classroom_home', classroom_id=storybook.classroom.id)
+
+    return redirect('detail_lesson', storybook_id=storybook.id)
+
+
+
+# views.py
+from django.contrib import messages
+from django.views.decorators.http import require_POST
+
+@login_required
+@require_POST
+def cancel_storybook(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
+
+    classroom_id = storybook.classroom.id  # เก็บก่อนลบ
+    storybook.delete()
+    messages.warning(request, "ยกเลิกและลบนิทานเรียบร้อยแล้ว")
+
+    return redirect('upload_lesson_file', classroom_id=classroom_id)
 
 
 
@@ -489,18 +606,6 @@ def upload_lesson_file_video(request):
         fs.save(uploaded_file.name, uploaded_file)
         return redirect('success_page')
     return render(request, 'teacher/create_upload_video.html')
-
-# def upload_lesson_file(request):
-#     if request.method == 'POST' and request.FILES.get('lesson_file'):
-#         uploaded_file = request.FILES['lesson_file']
-#         if uploaded_file.size > 10 * 1024 * 1024:  # > 10MB
-#             return render(request, 'teacher/create_upload_image.html', {'error': 'File size must be under 10MB.'})
-#         if not uploaded_file.name.lower().endswith(('.pdf')):
-#             return render(request, 'teacher/create_upload_image.html', {'error': 'Invalid file format.'})
-#         fs = FileSystemStorage()
-#         fs.save(uploaded_file.name, uploaded_file)
-#         return redirect('success_page')
-#     return render(request, 'teacher/create_upload_image.html')
 
 
 def notifications_view(request):
@@ -536,14 +641,5 @@ def notifications_view(request):
         # เพิ่มอีกตามต้องการ
     ]
     return render(request, 'teacher/notifications.html', {'notifications': notifications})
-
-# # urls.py (main project)
-# from django.contrib import admin
-# from django.urls import path, include
-
-# urlpatterns = [
-#     path('admin/', admin.site.urls),
-#     path('', include('classroom.urls')),
-# ]
 
 

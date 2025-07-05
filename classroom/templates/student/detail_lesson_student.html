@@ -1,0 +1,156 @@
+{% extends 'student/base_student.html' %}
+{% load static %}
+{% block title %}Lesson Detail{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-10 space-y-10">
+
+    <!-- Lesson Header -->
+    <h1 class="text-2xl font-bold text-gray-800">{{ storybook.title }}</h1>
+    <p class="text-gray-500 text-sm">By {{ storybook.user.get_full_name|default:storybook.user.email }}</p>
+
+    <!-- Flipbook Frame -->
+    <div class="relative bg-black rounded-[20px] w-full h-[600px] overflow-hidden shadow-lg">
+        <!-- Scene Pages -->
+        <div class="absolute inset-4 bg-white rounded-[16px] grid grid-cols-2 overflow-hidden">
+            {% for scene in scenes|slice:":2" %}
+            <div class="relative flex items-end justify-center p-4 border-r border-gray-300">
+                {% if scene.image_url %}
+                <img src="{{ scene.image_url }}" alt="Scene Image" class="absolute inset-0 w-full h-full object-cover">
+                {% endif %}
+                <div class="relative z-10 flex flex-col items-center space-y-2">
+                    <p class="bg-gray-600 text-white text-sm px-4 py-2 rounded-md max-w-[90%] text-center shadow-lg">
+                        {{ scene.text }}
+                    </p>
+                    {% if scene.audio_url %}
+                    <audio controls src="{{ scene.audio_url }}" class="w-full max-w-xs"></audio>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- ✅ ปุ่ม Prev / Next ติดขอบซ้าย-ขวา กลางแนวตั้ง -->
+        <button id="prev-btn"
+            class="absolute top-1/2 left-0 -translate-y-1/2 px-3 py-2 bg-white text-gray-700 rounded-r-lg shadow hover:bg-gray-200 transition z-30">
+            ⬅
+        </button>
+        <button id="next-btn"
+            class="absolute top-1/2 right-0 -translate-y-1/2 px-3 py-2 bg-white text-gray-700 rounded-l-lg shadow hover:bg-gray-200 transition z-30">
+            ➡
+        </button>
+    </div>
+
+    <!-- Player Control -->
+    <div class="flex items-center justify-between text-gray-600 text-sm mt-4">
+        <button
+            class="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow hover:bg-gray-100 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800" viewBox="0 0 24 24"
+                fill="currentColor">
+                <path d="M8 5v14l11-7z" />
+            </svg>
+        </button>
+        <div class="flex items-center gap-3">
+            <span class="text-gray-700 font-medium">01:00</span>
+            <button id="mute-btn"
+                class="flex items-center justify-center w-9 h-9 rounded-full bg-white shadow hover:bg-gray-100 transition">
+                <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5z" />
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a9 9 0 010 12.73" />
+                </svg>
+                <svg id="icon-sound-off" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800 hidden"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 14M15 5l-7 14" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+
+    <!-- Lesson Metadata Form -->
+    <form id="lesson-form" class="space-y-6">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Lesson Name</label>
+            <p class="border border-dashed border-blue-400 rounded-lg px-4 py-3 bg-gray-100">
+                {{ storybook.title }}
+            </p>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Creator</label>
+            <p class="border border-dashed border-blue-400 rounded-lg px-4 py-3 bg-gray-100">
+                {{ storybook.user.get_full_name|default:storybook.user.email }}
+            </p>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <div class="border border-dashed border-blue-400 rounded-lg px-4 py-3 bg-gray-100">
+                บทเรียน AI ที่สร้างจาก PDF/DOCX
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Additional Content</label>
+            <div class="border border-dashed border-blue-400 rounded-lg px-4 py-3 bg-gray-100">
+                -
+            </div>
+        </div>
+    </form>
+
+
+
+
+</div>
+
+<!-- JS -->
+<script>
+    const scenes = {{ scenes| safe }};
+    const container = document.querySelector(".grid.grid-cols-2");
+    let currentIndex = 0;
+
+    function renderScenes(index) {
+        container.innerHTML = "";
+        const left = scenes[index];
+        const right = scenes[index + 1];
+
+        [left, right].forEach((scene) => {
+            const sceneDiv = document.createElement("div");
+            sceneDiv.className = "relative flex items-end justify-center p-4 border-r border-gray-300";
+
+            if (scene) {
+                sceneDiv.innerHTML = `
+                    ${scene.image_url ? `<img src="${scene.image_url}" alt="Scene" class="absolute inset-0 w-full h-full object-cover">` : ''}
+                    <div class="relative z-10 flex flex-col items-center space-y-2">
+                        <p class="bg-gray-600 text-white text-sm px-4 py-2 rounded-md max-w-[90%] text-center shadow-lg">
+                            ${scene.text || ''}
+                        </p>
+                        ${scene.audio_url ? `<audio controls src="${scene.audio_url}" class="w-full max-w-xs"></audio>` : ''}
+                    </div>
+                `;
+            } else {
+                sceneDiv.innerHTML = `<div class="text-gray-400 text-sm italic">Empty Page</div>`;
+            }
+
+            container.appendChild(sceneDiv);
+        });
+    }
+
+    document.getElementById("next-btn")?.addEventListener("click", () => {
+        currentIndex = (currentIndex + 2) % scenes.length;
+        renderScenes(currentIndex);
+    });
+
+    document.getElementById("prev-btn")?.addEventListener("click", () => {
+        currentIndex = (currentIndex - 2 + scenes.length) % scenes.length;
+        renderScenes(currentIndex);
+    });
+
+    renderScenes(0); // Initial render
+</script>
+
+
+
+{% endblock %}

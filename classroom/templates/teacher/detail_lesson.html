@@ -68,6 +68,13 @@
         </div>
     </div>
 
+    <div class="flex justify-center mt-6">
+        <button id="Edit-Lesson" type="button"
+            class="w-full sm:w-64 px-6 py-3 rounded-xl bg-gray-800 text-white hover:bg-gray-700 transition">
+            Edit Lesson
+        </button>
+    </div>
+
 
     <!-- Lesson Metadata Form -->
     <form id="lesson-form" class="space-y-6">
@@ -85,15 +92,36 @@
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700">Description</label>
-            <textarea id="lesson-description"
-                class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3">บทเรียน AI ที่สร้างจาก PDF/DOCX</textarea>
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700">Additional Content</label>
-            <textarea id="lesson-additional"
-                class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3"></textarea>
-        </div>
+            <textarea id="lesson-description" type="text"
+                class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3"
+                placeholder="Description of the lesson"></textarea>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Additional Content</label>
+                <textarea id="lesson-additional"
+                    class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3"
+                    placeholder="Additional Content here"></textarea>
+            </div>
     </form>
+
+    <!-- 📥 Download Permission Section -->
+    <div class="space-y-2 mt-10">
+        <h3 class="text-lg font-semibold text-gray-900">Downloading</h3>
+        <p class="text-sm text-gray-500">Lesson Recording</p>
+
+        <div class="flex flex-col space-y-4 mt-2">
+            <!-- ✅ Anyone can download -->
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="download_permission" value="public" checked class="accent-blue-600 w-4 h-4">
+                <span class="text-gray-800 text-sm">Public Anyone can download your Lessons</span>
+            </label>
+
+            <!-- 🚫 Can't download -->
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="download_permission" value="private" class="accent-gray-400 w-4 h-4">
+                <span class="text-gray-500 text-sm">Public Anyone can’t download your Lessons</span>
+            </label>
+        </div>
+    </div>
 
     <!-- Post Test Assignment -->
     <h3 class="text-xl font-bold text-gray-800 mt-10">Post Test Assignment</h3>
@@ -101,23 +129,79 @@
     <div class="flex justify-center mt-6">
         <button id="add-question-btn" type="button"
             class="px-6 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700 transition">
-            + Add your own
+            + Add questions
         </button>
     </div>
 
     <!-- Upload Buttons -->
     <div class="mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
-        <button class="w-full sm:w-64 px-6 py-3 rounded-xl bg-gray-800 text-white hover:bg-gray-700 transition">
-            Cancel
-        </button>
-        <a id="upload-btn" href="{% url 'final' %}"
-            class="w-full sm:w-64 px-6 py-3 rounded-xl bg-gray-300 text-gray-700 cursor-not-allowed transition pointer-events-none text-center">
-            Upload Work
-        </a>
+
+        <!-- ❌ ปุ่ม Cancel แบบ submit ลบ -->
+        <form id="cancel-form" action="{% url 'cancel_storybook' storybook.id %}" method="post">
+            {% csrf_token %}
+            <button type="button" onclick="confirmCancel()"
+                class="w-full sm:w-64 px-6 py-3 rounded-xl bg-gray-800 text-white hover:bg-gray-700 transition">
+                Cancel
+            </button>
+        </form>
+
+        <!-- ✅ ปุ่ม Upload Work -->
+        <form id="upload-form" action="{% url 'final' storybook.id %}" method="post" class="w-full sm:w-64">
+            {% csrf_token %}
+            <input type="hidden" name="questions_json" id="questions-json">
+            <input type="hidden" name="download_permission" id="download-permission">
+            <input type="hidden" name="title" id="hidden-lesson-title">
+            <button id="upload-btn" type="submit"
+                class="w-full px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition">
+                Upload Work
+            </button>
+        </form>
     </div>
+
 </div>
 
 <!-- JS -->
+<script>
+    document.getElementById('upload-form').addEventListener('submit', function (e) {
+        const questions = [];
+        const questionItems = document.querySelectorAll('.question-item');
+
+        questionItems.forEach((item, idx) => {
+            const questionText = item.querySelector('input[type="text"]').value.trim();
+            const choiceInputs = item.querySelectorAll('input[type="text"]');
+            const choices = Array.from(choiceInputs).slice(1).map(i => i.value.trim());
+            const radios = item.querySelectorAll('input[type="radio"]');
+            let correct = 1;
+            radios.forEach((radio, i) => {
+                if (radio.checked) correct = i + 1;
+            });
+
+            questions.push({
+                question: questionText,
+                choices: choices,
+                correct: correct
+            });
+        });
+
+        const permission = document.querySelector('input[name="download_permission"]:checked')?.value || "public";
+        const title = document.getElementById('lesson-name').value.trim();
+
+        document.getElementById('questions-json').value = JSON.stringify(questions);
+        document.getElementById('download-permission').value = permission;
+        document.getElementById('hidden-lesson-title').value = title;
+    });
+</script>
+
+
+<!-- ยืนยันก่อนยกเลิก -->
+<script>
+    function confirmCancel() {
+        if (confirm("คุณแน่ใจหรือไม่ว่าต้องการยกเลิกและลบนิทานนี้?")) {
+            document.getElementById('cancel-form').submit();
+        }
+    }
+</script>
+
 <script>
     const scenes = {{ scenes| safe }};
     const container = document.querySelector(".grid.grid-cols-2");
@@ -163,5 +247,112 @@
     renderScenes(0); // Initial render
 </script>
 
+
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const container = document.getElementById('question-container');
+        const addBtn = document.getElementById('add-question-btn');
+        const uploadBtn = document.getElementById('upload-btn');
+        const maxQuestions = 10;
+
+        function createQuestion(index = 0) {
+            const el = document.createElement('div');
+            el.className = 'border-2 border-dashed border-blue-400 p-5 rounded-md relative bg-white question-item';
+
+            el.innerHTML = `
+                <button class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-lg remove-btn" title="Remove">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+                <div class="mb-4">
+                  <label class="text-sm font-medium text-gray-700 block mb-1">Question ${index + 1}</label>
+                  <input type="text" class="w-full border border-dashed border-gray-300 px-4 py-2 rounded-md" placeholder="Enter your question..." />
+                </div>
+                <div class="space-y-2">
+                  ${[1, 2, 3, 4].map(i => `
+                    <label class="flex items-center gap-2 border border-dashed border-gray-300 px-4 py-2 rounded-md">
+                      <input type="radio" name="q-${index}" class="accent-blue-500" />
+                      <input type="text" class="w-full text-sm focus:outline-none" placeholder="Choice ${i}" />
+                    </label>
+                  `).join('')}
+                </div>
+            `;
+            return el;
+        }
+
+        function refreshNumbers() {
+            const items = container.querySelectorAll('.question-item');
+            items.forEach((el, idx) => {
+                const label = el.querySelector('label');
+                if (label) label.textContent = `Question ${idx + 1}`;
+                const radios = el.querySelectorAll('input[type="radio"]');
+                radios.forEach(r => r.name = `q-${idx}`);
+            });
+        }
+
+        function isValidQuestion(questionDiv) {
+            const inputs = questionDiv.querySelectorAll('input[type="text"]');
+            const question = inputs[0]?.value.trim();
+            const choices = Array.from(inputs).slice(1);
+            const nonEmptyChoices = choices.filter(i => i.value.trim() !== '');
+            return question && nonEmptyChoices.length >= 2;
+        }
+
+        function validateForm() {
+            const name = document.getElementById('lesson-name').value.trim();
+            const creator = document.getElementById('lesson-creator').value.trim();
+            const questions = document.querySelectorAll('.question-item');
+            const validQuestions = Array.from(questions).every(isValidQuestion);
+            return name && creator && questions.length > 0 && validQuestions;
+        }
+
+        function toggleUploadButton() {
+            if (validateForm()) {
+                uploadBtn.disabled = false;
+                uploadBtn.classList.remove('bg-gray-300', 'text-gray-700', 'cursor-not-allowed', 'pointer-events-none');
+                uploadBtn.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700');
+            } else {
+                uploadBtn.disabled = true;
+                uploadBtn.classList.remove('bg-green-600', 'text-white', 'hover:bg-green-700');
+                uploadBtn.classList.add('bg-gray-300', 'text-gray-700', 'cursor-not-allowed', 'pointer-events-none');
+            }
+        }
+
+        addBtn.addEventListener('click', () => {
+            if (container.children.length < maxQuestions) {
+                const q = createQuestion(container.children.length);
+                container.appendChild(q);
+                refreshNumbers();
+                toggleUploadButton();
+            } else {
+                alert("You can add up to 10 questions only.");
+            }
+        });
+
+        container.addEventListener('click', e => {
+            if (e.target.closest('.remove-btn')) {
+                e.target.closest('.question-item').remove();
+                refreshNumbers();
+                toggleUploadButton();
+            }
+        });
+
+        document.addEventListener('input', toggleUploadButton);
+        document.addEventListener('click', () => setTimeout(toggleUploadButton, 100));
+    });
+</script>
+
+<script>
+    const btn = document.getElementById('mute-btn');
+    const iconOn = document.getElementById('icon-sound-on');
+    const iconOff = document.getElementById('icon-sound-off');
+
+    btn.addEventListener('click', () => {
+        iconOn.classList.toggle('hidden');
+        iconOff.classList.toggle('hidden');
+    });
+</script>
 
 {% endblock %}
