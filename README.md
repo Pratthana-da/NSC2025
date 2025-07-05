@@ -108,3 +108,10 @@ redis-server.exe
 ```
 celery -A classroom_project worker --loglevel=info --pool=solo
 ```
+### ยกเลิกการเปลี่ยนแปลงrequirements.txt
+```
+git restore requirements.txt
+```
+```
+del .\security.log
+```
