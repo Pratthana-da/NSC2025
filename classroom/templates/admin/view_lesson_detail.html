@@ -1,0 +1,23 @@
+{% extends 'admin/base_admin.html' %}
+{% block content %}
+<div class="p-6 space-y-4">
+  <h1 class="text-2xl font-bold text-gray-800">บทเรียน: {{ lesson.title }}</h1>
+
+  {% if scenes %}
+  <div class="grid gap-6 md:grid-cols-2">
+    {% for scene in scenes %}
+    <div class="rounded-lg border p-4 shadow">
+      <img src="{{ scene.image_url }}" alt="scene image" class="w-full h-48 object-cover rounded mb-2">
+      <p class="text-sm text-gray-700 whitespace-pre-line">{{ scene.text }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-gray-500">ยังไม่มีฉากสำหรับบทเรียนนี้</p>
+  {% endif %}
+
+  <div class="mt-6">
+    <a href="{% url 'teacher_lesson_list' lesson.user.id %}" class="text-blue-600 hover:underline">← กลับหน้ารายการบทเรียน</a>
+  </div>
+</div>
+{% endblock %}
