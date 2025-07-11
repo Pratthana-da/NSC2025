@@ -43,30 +43,43 @@
 
     <!-- Player Control -->
     <div class="flex items-center justify-between text-gray-600 text-sm mt-4">
-        <button
+        <button id="player-toggle"
             class="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow hover:bg-gray-100 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800" viewBox="0 0 24 24"
+            <!-- ▶️ Icon: เล่น -->
+            <svg id="icon-play" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800" viewBox="0 0 24 24"
                 fill="currentColor">
                 <path d="M8 5v14l11-7z" />
             </svg>
+            <!-- ⏸️ Icon: หยุด -->
+            <svg id="icon-pause" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800 hidden"
+                viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 4h4v16H6zM14 4h4v16h-4z" />
+            </svg>
         </button>
+
         <div class="flex items-center gap-3">
             <span class="text-gray-700 font-medium">01:00</span>
+            <!-- 🔈 ปุ่มเปิด/ปิดเสียง -->
             <button id="mute-btn"
                 class="flex items-center justify-center w-9 h-9 rounded-full bg-white shadow hover:bg-gray-100 transition">
+                <!-- ไอคอนเปิดเสียง -->
                 <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800"
                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5z" />
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a9 9 0 010 12.73" />
                 </svg>
+
+                <!-- ไอคอนปิดเสียง -->
                 <svg id="icon-sound-off" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800 hidden"
                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 14M15 5l-7 14" />
                 </svg>
             </button>
+
         </div>
     </div>
+
 
     <div class="flex justify-center mt-6">
         <button id="Edit-Lesson" type="button"
@@ -344,15 +357,192 @@
     });
 </script>
 
-<script>
-    const btn = document.getElementById('mute-btn');
-    const iconOn = document.getElementById('icon-sound-on');
-    const iconOff = document.getElementById('icon-sound-off');
 
-    btn.addEventListener('click', () => {
-        iconOn.classList.toggle('hidden');
-        iconOff.classList.toggle('hidden');
+
+
+
+<script>
+    const storybookId = {{ storybook.id }};
+    const ws = new WebSocket(`ws://${window.location.host}/ws/storybook/${storybookId}/`);
+
+    let scenesList = [];
+    let currentIndex = 0;
+    let currentAudioIndex = 0;
+    let currentAudios = [];
+    let isPlaying = false;
+    let isMuted = false;  // ✅ เริ่มต้น: เปิดเสียง
+
+    const container = document.querySelector(".grid.grid-cols-2");
+    const playerBtn = document.getElementById("player-toggle");
+    const iconPlay = document.getElementById("icon-play");
+    const iconPause = document.getElementById("icon-pause");
+
+    const muteBtn = document.getElementById('mute-btn');
+    const iconSoundOn = document.getElementById('icon-sound-on');
+    const iconSoundOff = document.getElementById('icon-sound-off');
+
+    const loadingDiv = document.createElement("div");
+    loadingDiv.className = "absolute inset-0 flex items-center justify-center text-gray-400 text-sm";
+    loadingDiv.id = "loading-message";
+    container.appendChild(loadingDiv);
+
+    function updateLoadingMessage() {
+        const expectedScene = scenesList.length + 1;
+        loadingDiv.innerText = `กำลังสร้างฉากที่ ${expectedScene}...`;
+    }
+
+    function togglePlayerIcon() {
+        iconPlay.classList.toggle("hidden", isPlaying);
+        iconPause.classList.toggle("hidden", !isPlaying);
+    }
+
+    function applyMuteToCurrentAudios() {
+        document.querySelectorAll('audio').forEach(audio => {
+            audio.muted = isMuted;
+        });
+    }
+
+    muteBtn?.addEventListener('click', () => {
+        isMuted = !isMuted;
+
+        iconSoundOn.classList.toggle('hidden', isMuted);
+        iconSoundOff.classList.toggle('hidden', !isMuted);
+
+        applyMuteToCurrentAudios();  // ✅ Mute/unmute ทุกเสียงที่เล่นอยู่
     });
+
+    async function playInOrder(audioLeft, audioRight) {
+        currentAudios = [audioLeft, audioRight].filter(a => a);
+        const audioList = currentAudios;
+
+        audioList.forEach(audio => {
+            audio.muted = isMuted;  // ✅ mute ก่อนเล่น
+        });
+
+        for (let i = currentAudioIndex; i < audioList.length; i++) {
+            if (!isPlaying) return;
+
+            try {
+                await audioList[i].play();
+                await new Promise(resolve => {
+                    audioList[i].onended = () => {
+                        currentAudioIndex = i + 1;
+                        resolve();
+                    };
+                });
+            } catch (e) {
+                console.warn("Failed to play audio", e);
+            }
+        }
+
+        if (isPlaying && currentIndex + 2 < scenesList.length) {
+            currentIndex += 2;
+            currentAudioIndex = 0;
+            renderScenePair(scenesList[currentIndex], scenesList[currentIndex + 1]);
+        }
+    }
+
+    function renderScenePair(left, right) {
+        currentAudioIndex = 0;
+        container.innerHTML = '';
+        [left, right].forEach((scene, index) => {
+            const sceneDiv = document.createElement("div");
+            sceneDiv.className = "relative flex items-end justify-center p-4 border-r border-gray-300";
+
+            if (scene) {
+                const audioHtml = scene.audio_url
+                    ? `<audio id="scene-audio-${index}" src="${scene.audio_url}" class="w-full max-w-xs"></audio>`
+                    : '';
+
+                sceneDiv.innerHTML = `
+                    ${scene.image_url ? `<img src="${scene.image_url}" class="absolute inset-0 w-full h-full object-cover">` : ''}
+                    <div class="relative z-10 flex flex-col items-center space-y-2">
+                        <p class="bg-gray-600 text-white text-sm px-4 py-2 rounded-md max-w-[90%] text-center shadow-lg">
+                            ${scene.text || ''}
+                        </p>
+                        ${audioHtml}
+                    </div>
+                `;
+            } else {
+                sceneDiv.innerHTML = `<div class="text-gray-400 text-sm italic">Empty Page</div>`;
+            }
+
+            container.appendChild(sceneDiv);
+        });
+
+        setTimeout(() => {
+            applyMuteToCurrentAudios();  // ✅ mute ตามสถานะปุ่ม
+
+            if (isPlaying) {
+                const audioLeft = document.getElementById("scene-audio-0");
+                const audioRight = document.getElementById("scene-audio-1");
+                playInOrder(audioLeft, audioRight);
+            }
+        }, 300);
+    }
+
+    ws.addEventListener('message', function (event) {
+        const data = JSON.parse(event.data);
+        const newScene = {
+            scene_number: data.scene_number,
+            text: data.text,
+            image_url: data.image_url,
+            audio_url: data.audio_url,
+        };
+
+        scenesList = scenesList.filter(scene => scene.scene_number !== newScene.scene_number);
+        scenesList.push(newScene);
+        scenesList.sort((a, b) => a.scene_number - b.scene_number);
+
+        if (scenesList.length === 2) {
+            currentIndex = 0;
+            renderScenePair(scenesList[0], scenesList[1]);
+        }
+
+        updateLoadingMessage();
+    });
+
+    playerBtn?.addEventListener("click", () => {
+        isPlaying = !isPlaying;
+        togglePlayerIcon();
+
+        if (isPlaying) {
+            const audioLeft = document.getElementById("scene-audio-0");
+            const audioRight = document.getElementById("scene-audio-1");
+            playInOrder(audioLeft, audioRight);
+        } else {
+            currentAudios.forEach(audio => {
+                audio.pause();
+            });
+        }
+    });
+
+    document.getElementById("next-btn")?.addEventListener("click", () => {
+        if (currentIndex + 2 < scenesList.length) {
+            currentIndex += 2;
+            currentAudioIndex = 0;
+            renderScenePair(scenesList[currentIndex], scenesList[currentIndex + 1]);
+        }
+    });
+
+    document.getElementById("prev-btn")?.addEventListener("click", () => {
+        if (currentIndex - 2 >= 0) {
+            currentIndex -= 2;
+            currentAudioIndex = 0;
+            renderScenePair(scenesList[currentIndex], scenesList[currentIndex + 1]);
+        }
+    });
+
+    updateLoadingMessage();
 </script>
+
+
+
+
+
+
+
+
+
 
 {% endblock %}

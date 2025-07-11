@@ -21,6 +21,22 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+
+# settings.py
+ASGI_APPLICATION = 'classroom_project.asgi.application'
+
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
+        },
+    },
+}
+
+
+
 # แล้วคุณจะสามารถเข้าถึงได้แบบนี้
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
@@ -80,6 +96,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'rest_framework',
+    'channels',
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -136,6 +153,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 
 ]
 
@@ -256,6 +274,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 STATICFILES_DIRS = [os.path.join(BASE_DIR / "classroom" / "static" )]
 STATIC_ROOT = os.path.join(BASE_DIR, "static")

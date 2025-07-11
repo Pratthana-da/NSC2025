@@ -1,0 +1,19 @@
+<h2 class="text-xl font-bold mb-4">ผลสอบ: {{ submission.storybook.title }}</h2>
+<p class="text-gray-600 mb-4">คะแนน: {{ submission.score }} / {{ answers.count }}</p>
+
+<ul class="space-y-4">
+  {% for ans in answers %}
+    <li class="border p-3 rounded">
+      <p><strong>Q:</strong> {{ ans.question.question_text }}</p>
+      <p>
+        <strong>คำตอบของคุณ:</strong>
+        {{ ans.selected_choice }} - 
+        {% if ans.selected_choice == ans.question.correct_choice %}
+          <span class="text-green-600 font-semibold">ถูกต้อง ✅</span>
+        {% else %}
+          <span class="text-red-600 font-semibold">ผิด ❌</span>
+        {% endif %}
+      </p>
+    </li>
+  {% endfor %}
+</ul>

@@ -7,11 +7,11 @@
     <!-- Header -->
     <header class="flex justify-between items-center mb-8">
         <h1 class="text-3xl font-bold text-gray-900">
-            Hello{% if user.user_type == "teacher" %} Teacher 👋{% else %} student 👋{% endif %}
+            สวัสดี{% if user.user_type == "teacher" %} คุณครู 👋{% else %} นักเรียน 👋{% endif %}
         </h1>
         <div class="flex items-center gap-4">
             <div class="flex items-center bg-white px-5 py-3 rounded-xl border border-gray-200 shadow-sm">
-                <span class="text-sm text-gray-500">Class Code:</span>
+                <span class="text-sm text-gray-500">รหัสชั้นเรียน:</span>
                 <span id="classCode" class="ml-2 text-base font-semibold text-gray-900 tracking-wide">
                     {{ classroom.code }}
                 </span>
@@ -37,9 +37,13 @@
 
         <!-- Content on top of image -->
         <div class="relative z-10">
-            <h2 class="text-3xl font-bold">Welcome to your classroom</h2>
+            <h2 class="text-3xl font-bold">ยินดีต้อนรับเข้าสู่ห้องเรียน</h2>
+            <h2 class="text-3xl font-bold">ของคุณ</h2>
             <p class="mt-2 text-base text-white/90">
-                Let's start creating amazing things together with AI storybook!
+                มาเริ่มสร้างสรรค์สิ่งที่น่าอัศจรรย์ร่วมกันกับหนังสือน
+            </p>
+            <p class="mt-2 text-base text-white/90">
+                ทาน AI กันเถอะ!
             </p>
         </div>
     </div>
@@ -49,16 +53,16 @@
         <a href="{% url 'upload_lesson_file' classroom.id %}"
             class="bg-white border border-gray-200 rounded-xl p-6 text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-200 group">
             <i class="fas fa-image text-primary text-3xl mb-4 group-hover:scale-110 transition-transform"></i>
-            <span class="block text-lg font-semibold text-gray-900">Create lesson to image</span>
+            <span class="block text-lg font-semibold text-gray-900">สร้างบทเรียนให้เป็นภาพนิทาน</span>
         </a>
         <a href="#"
             class="bg-white border border-gray-200 rounded-xl p-6 text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-200 group">
             <i class="fas fa-video text-primary text-3xl mb-4 group-hover:scale-110 transition-transform"></i>
-            <span class="block text-lg font-semibold text-gray-900">Create lesson to video</span>
+            <span class="block text-lg font-semibold text-gray-900">สร้างบทเรียนให้เป็นวิดีโอนิทาน</span>
         </a>
     </div>
 
-    <h2 class="text-2xl font-bold text-gray-800 mt-10">My Storybooks</h2>
+    <h2 class="text-2xl font-bold text-gray-800 mt-10">บทเรียนทั้งหมด</h2>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
         {% for storybook in storybooks %}
@@ -69,23 +73,58 @@
             {% endwith %}
             <div class="p-5 space-y-1">
                 <h3 class="text-lg font-semibold">{{ storybook.title }}</h3>
-                <p class="text-sm text-gray-500">Created {{ storybook.created_at|date:"d M Y" }}</p>
+                <p class="text-sm text-gray-500">สร้างเมื่อ {{ storybook.created_at|date:"d M Y" }}</p>
                 <div class="mt-3 flex justify-between items-center text-sm text-indigo-600 font-medium">
                     <span>{{ storybook.scenes.count }} scenes</span>
-                    <a href="{% url 'view_uploaded_lesson' storybook.id %}">View</a>
+                    <a href="{% url 'view_uploaded_lesson' storybook.id %}">ดูบทเรียน</a>
 
-        
+
                 </div>
             </div>
         </div>
         {% empty %}
-        <div class="col-span-full text-center text-gray-500">No storybooks created yet for this class.</div>
+        <div class="col-span-full text-center text-gray-500">ยังไม่มีบทเรียนที่อัปโหลด</div>
         {% endfor %}
     </div>
 
 
+
+
+    <h2 class="text-2xl font-bold text-gray-800 mt-10">ยังไม่อัปโหลด</h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+        {% with 0 as found %}
+        {% for storybook in storybooks %}
+        {% if not storybook.is_uploaded and not storybook.is_failed %}
+        {% with found|add:"1" as found %}
+        <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition">
+            {% with storybook.scenes.first.image_url as image %}
+            <img src="{% if image %}{{ image }}{% else %}https://picsum.photos/seed/{{ storybook.id }}/400/200{% endif %}"
+                alt="Preview" class="w-full h-44 object-cover">
+            {% endwith %}
+            <div class="p-5 space-y-1">
+                <h3 class="text-lg font-semibold">{{ storybook.title }}</h3>
+                <p class="text-sm text-gray-500">สร้างเมื่อ {{ storybook.created_at|date:"d M Y" }}</p>
+                <div class="mt-3 flex justify-between items-center text-sm text-indigo-600 font-medium">
+                    <span>{{ storybook.scenes.count }} scenes</span>
+                    <a href="{% url 'view_uploaded_lesson' storybook.id %}">ดูบทเรียน</a>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% endif %}
+        {% endfor %}
+        {% if found == 0 %}
+        <div class="col-span-full text-center text-gray-500">
+            ยังไม่มีการสร้างหนังสือเรื่องราวที่ยังไม่อัปโหลดสำหรับชั้นเรียนนี้
+        </div>
+        {% endif %}
+        {% endwith %}
+    </div>
+
+
     <script>
-        function copyClassCode() {  
+        function copyClassCode() {
             const text = document.getElementById('classCode').innerText;
             navigator.clipboard.writeText(text).then(() => {
                 alert('คัดลอกรหัสชั้นเรียนแล้ว: ' + text);

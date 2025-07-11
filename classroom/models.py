@@ -69,7 +69,7 @@ User = get_user_model()
 class Lesson(models.Model):
     # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name="lessons", null=True, blank=True)  # ✅ เพิ่ม
+    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name="lessons", null=True, blank=True) 
     title = models.CharField(max_length=255)
     file = models.FileField(upload_to='lessons/')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -82,7 +82,7 @@ class Lesson(models.Model):
 # models.py
 class Storybook(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name="storybooks", null=True, blank=True)  # ✅ เพิ่ม
+    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name="storybooks", null=True, blank=True)
     title = models.CharField(max_length=255)
     file = models.FileField(upload_to='lessons/')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -114,21 +114,38 @@ class PostTestQuestion(models.Model):
     correct_choice = models.PositiveSmallIntegerField(choices=[(1, 'Choice 1'), (2, 'Choice 2'), (3, 'Choice 3'), (4, 'Choice 4')])
     created_at = models.DateTimeField(auto_now_add=True)
 
+    
+class PostTestSubmission(models.Model):  # หรือชื่อ PostTestAttempt
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    storybook = models.ForeignKey(Storybook, on_delete=models.CASCADE)
+    score = models.IntegerField()
+    submitted_at = models.DateTimeField(auto_now_add=True)
 
-# class TeacherID(models.Model):
-#     full_name = models.CharField(max_length=255)
-#     email = models.EmailField(unique=True)
-#     teacher_code = models.CharField(max_length=20, unique=True)
+    def __str__(self):
+        return f'{self.user.email} - {self.storybook.title} ({self.score})'
 
-#     def __str__(self):
-#         return f"{self.full_name} ({self.teacher_code})"
 
-# class TeacherID(models.Model):
-#     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacher_id')
-#     teacher_code = models.CharField(max_length=20, unique=True)
+class PostTestAnswer(models.Model):
+    submission = models.ForeignKey(PostTestSubmission, on_delete=models.CASCADE, related_name='answers')
+    question = models.ForeignKey(PostTestQuestion, on_delete=models.CASCADE)
+    selected_choice = models.PositiveSmallIntegerField()
 
-#     def __str__(self):
-#         return f"{self.user.get_full_name()} ({self.teacher_code})"
+    def is_correct(self):
+        return self.selected_choice == self.question.correct_choice
+    
+
+
+class Report(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    storybook = models.ForeignKey('classroom.Storybook', on_delete=models.CASCADE)
+    reason = models.CharField(max_length=255)
+    detail = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Report by {self.user} on {self.storybook}"
+
+
     
 
 class TeacherID(models.Model):

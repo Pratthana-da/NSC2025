@@ -129,3 +129,14 @@ class JoinClassroomForm(forms.Form):
         max_length=10, 
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'รหัสชั้นเรียน'})
     )
+
+
+
+from django import forms
+from .models import Report
+
+class ReportForm(forms.ModelForm):
+    class Meta:
+        model = Report
+        fields = ['reason', 'detail']
+
