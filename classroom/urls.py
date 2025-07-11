@@ -34,15 +34,19 @@ urlpatterns = [
     path('student/storybook/<int:storybook_id>/view/', views.student_view_storybook, name='student_display_lesson'),
     path('select-role/', views.select_role_view, name='select_role'),
 
+    path('submit-report/<int:storybook_id>/', views.submit_report, name='submit_report'),
 
 
     path('final/<int:storybook_id>/', views.final, name='final'),
 
     path('storybook/<int:storybook_id>/cancel/', views.cancel_storybook, name='cancel_storybook'),
+    path('student/storybook/<int:storybook_id>/post-test/', views.take_post_test, name='take_post_test'),
+    path('student/post-test/result/<int:submission_id>/', views.post_test_result, name='post_test_result'),
+    path("detail-lesson-all/<int:storybook_id>/", views.detail_lesson_all, name="detail_lesson_all"),
 
 
-    path('storybook/<int:storybook_id>/status/', views.storybook_status, name='storybook_status'),
-    path('api/storybook/<int:storybook_id>/status/', views.storybook_status_check_api, name='api_storybook_status'),
+    # path('storybook/<int:storybook_id>/status/', views.storybook_status, name='storybook_status'),
+    # path('api/storybook/<int:storybook_id>/status/', views.storybook_status_check_api, name='api_storybook_status'),
     # path('storybook/<int:storybook_id>/view/', views.view_storybook, name='view_storybook'),
 
     path('password_reset/', auth_views.PasswordResetView.as_view(template_name='password_reset_form.html'),name='password_reset'),

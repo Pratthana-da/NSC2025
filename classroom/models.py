@@ -113,5 +113,34 @@ class PostTestQuestion(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class PostTestSubmission(models.Model):  # หรือชื่อ PostTestAttempt
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    storybook = models.ForeignKey(Storybook, on_delete=models.CASCADE)
+    score = models.IntegerField()
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.user.email} - {self.storybook.title} ({self.score})'
+
+
+class PostTestAnswer(models.Model):
+    submission = models.ForeignKey(PostTestSubmission, on_delete=models.CASCADE, related_name='answers')
+    question = models.ForeignKey(PostTestQuestion, on_delete=models.CASCADE)
+    selected_choice = models.PositiveSmallIntegerField()
+
+    def is_correct(self):
+        return self.selected_choice == self.question.correct_choice
+    
+
+
+class Report(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    storybook = models.ForeignKey('classroom.Storybook', on_delete=models.CASCADE)
+    reason = models.CharField(max_length=255)
+    detail = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Report by {self.user} on {self.storybook}"
 
 

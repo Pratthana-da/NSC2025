@@ -1,0 +1,82 @@
+{% extends 'student/base_student.html' %}
+{% block title %}แบบทดสอบ{% endblock %}
+
+{% block content %}
+
+<div class="bg-gradient-to-b from-white to-purple-50 min-h-screen flex items-center justify-center px-4 py-10">
+
+    <form method="post" id="quiz-form"
+        class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-8 space-y-10 border border-purple-200">
+        {% csrf_token %}
+
+        <h2 class="text-3xl font-bold text-center text-purple-700">
+            🎮 แบบทดสอบจากนิทาน AI
+        </h2>
+
+        {% for item in randomized_questions %}
+        <div class="question-step {% if not forloop.first %}hidden{% endif %}" data-step="{{ forloop.counter0 }}">
+            <div class="space-y-6">
+                <p class="text-xl font-semibold text-purple-800">
+                    ❓ ข้อ {{ forloop.counter }}: {{ item.question.question_text }}
+                </p>
+
+                <div class="space-y-4">
+                    {% for choice in item.choices %}
+                    <label
+                        class="block bg-purple-50 border border-purple-200 rounded-xl p-4 hover:bg-purple-100 transition cursor-pointer">
+                        <input type="radio" name="question_{{ item.question.id }}" value="{{ choice.0 }}" required
+                            class="accent-purple-600 mr-3">
+                        <span class="text-gray-800 text-base">{{ choice.1 }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <div class="text-right">
+                    <button type="button"
+                        class="next-btn mt-4 px-6 py-2 bg-purple-600 text-white font-semibold rounded-full shadow hover:bg-purple-500 transition">
+                        ▶️ ถัดไป
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div id="submit-section" class="hidden text-center">
+            <button type="submit"
+                class="mt-8 px-10 py-3 bg-pink-600 hover:bg-pink-500 text-white font-bold text-lg rounded-full shadow-lg transition">
+                ✅ ส่งคำตอบทั้งหมด
+            </button>
+        </div>
+    </form>
+
+</div>
+
+<script>
+    const steps = document.querySelectorAll(".question-step");
+    const nextButtons = document.querySelectorAll(".next-btn");
+    const submitSection = document.getElementById("submit-section");
+    let currentStep = 0;
+
+    nextButtons.forEach((btn, index) => {
+        btn.addEventListener("click", () => {
+            const currentQuestion = steps[index];
+            const selected = currentQuestion.querySelector("input[type='radio']:checked");
+
+            if (!selected) {
+                alert("กรุณาเลือกคำตอบก่อนนะครับ 😊");
+                return;
+            }
+
+            currentQuestion.classList.add("hidden");
+            currentStep++;
+
+            if (currentStep < steps.length) {
+                steps[currentStep].classList.remove("hidden");
+            } else {
+                submitSection.classList.remove("hidden");
+            }
+        });
+    });
+</script>
+
+{% endblock %}

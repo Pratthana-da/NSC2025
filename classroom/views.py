@@ -50,6 +50,33 @@ from .models import Storybook
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 
+
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from .models import Storybook, Report
+from .forms import ReportForm
+
+@csrf_exempt
+@login_required
+def submit_report(request, storybook_id):
+    if request.method == "POST":
+        storybook = get_object_or_404(Storybook, pk=storybook_id)
+        form = ReportForm(request.POST)
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.user = request.user
+            report.storybook = storybook
+            report.save()
+            return JsonResponse({"status": "success"})
+        else:
+            return JsonResponse({"status": "error", "errors": form.errors})
+    return JsonResponse({"status": "invalid method"})
+
+
+
+
 @login_required
 def upload_lesson_file(request, classroom_id):
     classroom = get_object_or_404(Classroom, id=classroom_id)
@@ -79,7 +106,7 @@ def upload_lesson_file(request, classroom_id):
             process_storybook_async.delay(storybook.id)
 
             # ✅ redirect ไปหน้า status หรือ classroom_home ก็ได้
-            return redirect('storybook_status', storybook_id=storybook.id)
+            return redirect('detail_lesson', storybook_id=storybook.id)
 
         else:
             print("❌ Form Errors:", form.errors)
@@ -93,44 +120,43 @@ def upload_lesson_file(request, classroom_id):
 
 
 
-@login_required
-def storybook_status(request, storybook_id):
-    storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
-    return render(request, 'teacher/storybook_status.html', {'storybook': storybook})
+# @login_required
+# def storybook_status(request, storybook_id):
+#     storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
+#     return render(request, 'teacher/storybook_status.html', {'storybook': storybook})
 
 
-@api_view(['GET'])
-def storybook_status_check_api(request, storybook_id):
-    storybook = get_object_or_404(Storybook, id=storybook_id)
-    total_created = Scene.objects.filter(storybook=storybook).count()
-    return Response({
-        'is_ready': storybook.is_ready,
-        'is_failed': storybook.is_failed,
-        'current_scene': total_created,
-        'total_scenes': 20
-    })
+# @api_view(['GET'])
+# def storybook_status_check_api(request, storybook_id):
+#     storybook = get_object_or_404(Storybook, id=storybook_id)
+#     total_created = Scene.objects.filter(storybook=storybook).count()
+#     return Response({
+#         'is_ready': storybook.is_ready,
+#         'is_failed': storybook.is_failed,
+#         'current_scene': total_created,
+#         'total_scenes': 20
+#     })
+
+
 
 
 # @login_required
-# def view_storybook(request, storybook_id):
+# def teacher_view_storybook(request, storybook_id):
 #     storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
-#     scenes = storybook.scenes.order_by('scene_number')
 
+#     scenes = storybook.scenes.order_by('scene_number')
 #     context = {
 #         'storybook': storybook,
-#         'scenes': json.dumps(list(scenes.values('scene_number', 'text', 'image_url')), cls=DjangoJSONEncoder)
+#         'scenes': json.dumps(list(scenes.values('scene_number', 'text', 'image_url', 'audio_url')), cls=DjangoJSONEncoder)
 #     }
 #     return render(request, 'teacher/detail_lesson.html', context)
-
 
 @login_required
 def teacher_view_storybook(request, storybook_id):
     storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
 
-    scenes = storybook.scenes.order_by('scene_number')
     context = {
         'storybook': storybook,
-        'scenes': json.dumps(list(scenes.values('scene_number', 'text', 'image_url', 'audio_url')), cls=DjangoJSONEncoder)
     }
     return render(request, 'teacher/detail_lesson.html', context)
 
@@ -154,21 +180,84 @@ def view_uploaded_lesson(request, storybook_id):
 
 
 
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Storybook, PostTestQuestion, PostTestSubmission, PostTestAnswer
+from django.contrib.auth.decorators import login_required
+import random
+
+@login_required
+def take_post_test(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id)
+    questions = list(PostTestQuestion.objects.filter(storybook=storybook))
+
+    if request.method == 'POST':
+        total_correct = 0
+        submission = PostTestSubmission.objects.create(
+            user=request.user,
+            storybook=storybook,
+            score=0
+        )
+
+        for question in questions:
+            selected = request.POST.get(f'question_{question.id}')
+            if selected:
+                selected = int(selected)
+                PostTestAnswer.objects.create(
+                    submission=submission,
+                    question=question,
+                    selected_choice=selected
+                )
+                if selected == question.correct_choice:
+                    total_correct += 1
+
+        submission.score = total_correct
+        submission.save()
+        return redirect('post_test_result', submission.id)
+
+    # สุ่ม choices สำหรับแต่ละคำถาม
+    randomized_questions = []
+    for q in questions:
+        choices = [
+            (1, q.choice_1),
+            (2, q.choice_2),
+            (3, q.choice_3),
+            (4, q.choice_4),
+        ]
+        random.shuffle(choices)
+        randomized_questions.append({
+            'question': q,
+            'choices': choices
+        })
+
+    return render(request, 'student/post_test_form.html', {
+        'storybook': storybook,
+        'randomized_questions': randomized_questions,
+    })
+
+@login_required
+def post_test_result(request, submission_id):
+    submission = get_object_or_404(PostTestSubmission, id=submission_id, user=request.user)
+    answers = submission.answers.all()
+
+    return render(request, 'student/post_test_result.html', {
+        'submission': submission,
+        'answers': answers
+    })
 
 
 @login_required
 def student_view_storybook(request, storybook_id):
     storybook = get_object_or_404(Storybook, id=storybook_id)
 
+    # เช็คว่านักเรียนอยู่ใน classroom ของ storybook นี้ไหม
     if request.user not in storybook.classroom.students.all():
         return HttpResponseForbidden("You do not have permission to view this storybook.")
 
-    scenes = storybook.scenes.order_by('scene_number')
     context = {
         'storybook': storybook,
-        'scenes': json.dumps(list(scenes.values('scene_number', 'text', 'image_url', 'audio_url')), cls=DjangoJSONEncoder)
     }
     return render(request, 'student/detail_lesson_student.html', context)
+
 
 def student_display_lesson(request, lesson_id):
     lesson = get_object_or_404(Lesson, id=lesson_id)
@@ -181,8 +270,14 @@ def detail_lesson(request, lesson_id):
     return render(request, 'teacher/detail_lesson.html', {'lesson': lesson})
 
 
-# def final(request):
-#     return render(request, 'teacher/final.html')
+def detail_lesson_all(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id)
+    scenes = Scene.objects.filter(storybook=storybook)
+    return render(request, 'student/detail_lesson_all.html', {
+        'storybook': storybook,
+        'scenes': scenes
+    })
+
 
 
 
