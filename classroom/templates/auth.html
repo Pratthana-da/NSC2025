@@ -7,6 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="csrf-token" content="{{ csrf_token }}">
   <title>Authentication</title>
 
   <!-- Tailwind -->
@@ -46,7 +47,7 @@
     {% endif %}
 
     <!-- 🔐 Login Form -->
-    <form method="POST" id="loginForm" class="space-y-4">
+    <form method="POST" id="loginForm" class="space-y-4" autocomplete="off">
       {% csrf_token %}
       <input type="hidden" name="action" value="login">
 
@@ -95,7 +96,7 @@
     </form>
 
     <!-- 📝 Register Form -->
-    <form method="POST" id="registerForm" class="space-y-4 hidden">
+    <form method="POST" id="registerForm" class="space-y-4 hidden" autocomplete="off">
       {% csrf_token %}
       <input type="hidden" name="action" value="register">
 
@@ -174,6 +175,13 @@
       }
     }
 
+    function refreshCSRFToken() {
+      const token = document.querySelector('meta[name="csrf-token"]').content;
+      document.querySelectorAll('input[name="csrfmiddlewaretoken"]').forEach(input => {
+        input.value = token;
+      });
+    }
+
     // toggle tab
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
@@ -181,11 +189,13 @@
     document.getElementById('showLogin').onclick = () => {
       loginForm.classList.remove('hidden');
       registerForm.classList.add('hidden');
+      refreshCSRFToken();
     };
 
     document.getElementById('showRegister').onclick = () => {
       registerForm.classList.remove('hidden');
       loginForm.classList.add('hidden');
+      refreshCSRFToken();
     };
   </script>
 </body>

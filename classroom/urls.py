@@ -9,6 +9,8 @@ urlpatterns = [
     path('class-create/', views.class_create_teacher, name='class_create'),
     path('class-join/', views.class_join_student, name='class_join'),
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    # path('school-admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
+
     path('classroom-created/', views.create_classroom, name='classroom_created'),
     path('courses-enroll/', views.join_classroom, name='courses_enroll'),
     path('classroom/<uuid:classroom_id>/', views.classroom_home, name='classroom_home'),
@@ -21,12 +23,22 @@ urlpatterns = [
     path('veiwe-profile-student/', views.view_profile_student, name='view_profile_student'),
     path('teacher/profile-settings-teacher/', views.profile_settings_teacher, name='profile_settings_teacher'),
     path('view-profile-teacher/', views.view_profile_teacher, name='view_profile_teacher'),
+    path('school-admin/profile-settings-admin/', views.profile_settings_admin, name='profile_settings_admin'),
+    path('view-profile-admin/', views.view_profile_admin, name='view_profile_admin'),
 
     path('classroom/<uuid:classroom_id>/create-upload/', views.upload_lesson_file, name='upload_lesson_file'),
     path('classroom/<uuid:classroom_id>/create-upload-video/', views.upload_lesson_file_video, name='upload_lesson_file_video'),
     path('notifications/', views.notifications_view, name='notifications'),
+    path('admin/lesson/delete/<int:storybook_id>/', views.delete_storybook, name='delete_storybook'),
+    path('school-admin/dashboard/', views.admin_lesson_dashboard, name='admin_lesson_dashboard'),
 
-
+    path('school-admin/user-list/', views.user_list_view, name='user_list'),
+    path("school-admin/add-teacher/", views.add_teacher_registry_view, name="add_teacher_registry"),
+    path('school-admin/delete-teacher/<int:teacher_id>/', views.delete_teacher_view, name='delete_teacher'),
+    path('school-admin/delete-user/<int:user_id>/', views.delete_user_view, name='delete_user'),
+    path('school-admin/teacher/<int:teacher_id>/lessons/', views.teacher_lesson_list_view, name='teacher_lesson_list'),
+    path('school-admin/teacher/lesson/<int:lesson_id>/delete/', views.delete_teacher_lesson_view, name='delete_teacher_lesson'),
+    path('school-admin/teacher/lesson/<int:lesson_id>/', views.admin_view_lesson_detail, name='admin_view_lesson_detail'),
 
     path('storybook/<int:storybook_id>/view/', views.teacher_view_storybook, name='detail_lesson'),
     path('storybook/<int:storybook_id>/view-uploaded/', views.view_uploaded_lesson, name='view_uploaded_lesson'),
@@ -35,7 +47,6 @@ urlpatterns = [
     path('select-role/', views.select_role_view, name='select_role'),
 
     path('submit-report/<int:storybook_id>/', views.submit_report, name='submit_report'),
-
 
     path('final/<int:storybook_id>/', views.final, name='final'),
 

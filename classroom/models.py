@@ -69,7 +69,7 @@ User = get_user_model()
 class Lesson(models.Model):
     # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name="lessons", null=True, blank=True)  # ✅ เพิ่ม
+    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name="lessons", null=True, blank=True) 
     title = models.CharField(max_length=255)
     file = models.FileField(upload_to='lessons/')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -82,7 +82,7 @@ class Lesson(models.Model):
 # models.py
 class Storybook(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name="storybooks", null=True, blank=True)  # ✅ เพิ่ม
+    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name="storybooks", null=True, blank=True)
     title = models.CharField(max_length=255)
     file = models.FileField(upload_to='lessons/')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -90,6 +90,8 @@ class Storybook(models.Model):
     is_failed = models.BooleanField(default=False)
     is_uploaded = models.BooleanField(default=False)
     download_permission = models.CharField(max_length=10, choices=[('public', 'Public'), ('private', 'Private')], default='public')
+    lesson = models.ForeignKey('Lesson', on_delete=models.CASCADE, related_name='storybook', null=True, blank=True)
+
 
 class Scene(models.Model):
     storybook = models.ForeignKey(Storybook, related_name='scenes', on_delete=models.CASCADE)
@@ -98,7 +100,7 @@ class Scene(models.Model):
     image_prompt = models.TextField()
     image_url = models.URLField(max_length=1000, blank=True, null=True)
     audio_url = models.URLField(max_length=1000, blank=True, null=True)  # ✅ เพิ่ม
-
+    
 
 class PostTestQuestion(models.Model):
     storybook = models.ForeignKey(Storybook, on_delete=models.CASCADE, related_name='questions')
@@ -112,7 +114,7 @@ class PostTestQuestion(models.Model):
     correct_choice = models.PositiveSmallIntegerField(choices=[(1, 'Choice 1'), (2, 'Choice 2'), (3, 'Choice 3'), (4, 'Choice 4')])
     created_at = models.DateTimeField(auto_now_add=True)
 
-
+    
 class PostTestSubmission(models.Model):  # หรือชื่อ PostTestAttempt
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     storybook = models.ForeignKey(Storybook, on_delete=models.CASCADE)
@@ -144,3 +146,13 @@ class Report(models.Model):
         return f"Report by {self.user} on {self.storybook}"
 
 
+    
+
+class TeacherID(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacher_id', null=True, blank=True)
+    full_name = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
+    teacher_code = models.CharField(max_length=20, unique=True)
+
+    def __str__(self):
+        return f"{self.full_name} ({self.teacher_code})"

@@ -11,7 +11,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import View
 from django.utils import timezone
 from django.db.models import Q
-from .models import User, Classroom
+from .models import TeacherID, User, Classroom
 from .forms import SecureUserCreationForm, SecureAuthenticationForm, JoinClassroomForm
 import logging
 from django.http import HttpResponse 
@@ -49,6 +49,10 @@ from django.contrib.auth import get_backends
 from .models import Storybook
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
+# from .models import TeacherRegistry
+from .models import TeacherID
+from django.contrib.auth.decorators import user_passes_test
+
 
 
 from django.shortcuts import get_object_or_404
@@ -352,6 +356,39 @@ def view_profile_student(request):
         'hidden_fields': hidden_fields,
     })
 
+@login_required
+def profile_settings_admin(request):
+    user = request.user
+    if request.method == 'POST':
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('profile_settings_admin')  # ✅ redirect กลับมา path ของ student
+    else:
+        form = ProfileUpdateForm(instance=user)
+
+    hidden_fields = [
+        'profile_picture', 'bio', 'facebook', 'line',
+        'teaching_subjects', 'class_code', 'classroom_link'
+    ]
+
+    return render(request, 'admin/profile_settings_admin.html', {
+        'form': form,
+        'hidden_fields': hidden_fields
+    })
+
+@login_required
+def view_profile_admin(request):
+    form = ProfileUpdateForm(instance=request.user)
+    hidden_fields = [
+        'profile_picture', 'bio', 'facebook', 'line',
+        'teaching_subjects', 'class_code', 'classroom_link'
+    ]
+    return render(request, 'admin/view_profile_admin.html', {
+        'form': form,
+        'user': request.user,
+        'hidden_fields': hidden_fields,
+    })
 
 @api_view(['GET'])
 def classroom_list_api(request):
@@ -386,15 +423,23 @@ def select_role_view(request):
         return redirect('classroom_created')
     elif user.user_type == 'student':
         return redirect('courses_enroll')
+    elif user.user_type == 'admin': 
+        return redirect('admin_lesson_dashboard')
 
     if request.method == 'POST':
         role = request.POST.get('role')
 
         if role == 'teacher':
-            user.user_type = 'teacher'
-            user.is_approved = True
-            user.save()
-            return redirect('classroom_created')
+            input_code = request.POST.get('teacher_code')
+            match = TeacherID.objects.filter(email=user.email, teacher_code=input_code).first()
+
+            if match:
+                user.user_type = 'teacher'
+                user.is_approved = True
+                user.save()
+                return redirect('classroom_created')
+            else:
+                messages.error(request, "รหัสประจำตัวครูไม่ถูกต้อง หรือยังไม่ได้ลงทะเบียน")
 
         elif role == 'student':
             user.user_type = 'student'
@@ -408,12 +453,13 @@ def select_role_view(request):
 @never_cache
 def auth_view(request):
     if request.user.is_authenticated:
+        user = request.user
         if request.user.user_type == 'teacher':
             return redirect('classroom_created')
         elif request.user.user_type == 'student':
             return redirect('courses_enroll')
-        else:
-            return redirect('select_role')
+        elif request.user.user_type == 'admin':
+            return redirect('admin_lesson_dashboard') 
 
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -427,14 +473,30 @@ def auth_view(request):
                 logger.info(f'User {user.email} logged in.')
 
                 # ✅ Redirect based on user_type
+                # if not user.user_type:
+                #     return redirect('select_role')
+                # elif user.user_type == 'teacher':
+                #     return redirect('classroom_created')
+                # elif user.user_type == 'student':
+                #     return redirect('courses_enroll')
+                # else:
+                #     return redirect('select_role')
+
                 if not user.user_type:
+                    if user.is_superuser or user.is_staff:
+                        user.user_type = 'admin'
+                        user.save()
+                        return redirect('admin_lesson_dashboard')
+                else:
                     return redirect('select_role')
-                elif user.user_type == 'teacher':
+
+                # ✅ redirect ตาม user_type
+                if user.user_type == 'teacher':
                     return redirect('classroom_created')
                 elif user.user_type == 'student':
                     return redirect('courses_enroll')
-                else:
-                    return redirect('select_role')
+                elif user.user_type == 'admin':
+                    return redirect('admin_lesson_dashboard')
 
             else:
                 logger.warning("❌ Failed login")
@@ -737,4 +799,118 @@ def notifications_view(request):
     ]
     return render(request, 'teacher/notifications.html', {'notifications': notifications})
 
+@login_required
+def delete_storybook(request, storybook_id):
+    if request.method == 'POST':
+        storybook = get_object_or_404(Storybook, id=storybook_id)
 
+        # ✅ ตรวจสอบสิทธิ์ (เฉพาะ admin หรือเจ้าของ)
+        if request.user.user_type == 'admin' or request.user == storybook.user:
+            storybook.delete()
+            messages.success(request, "ลบบทเรียนเรียบร้อยแล้ว")
+        else:
+            messages.error(request, "คุณไม่มีสิทธิ์ลบบทเรียนนี้")
+
+    return redirect('admin_lesson_dashboard')
+
+@login_required
+def admin_lesson_dashboard(request):
+    if request.user.user_type != 'admin':
+        return redirect('select_role')  # class_join_createป้องกันคนอื่นเข้า
+
+    total_users = User.objects.exclude(user_type='admin').count()
+    total_storybooks = Storybook.objects.count()
+    storybooks = Storybook.objects.select_related('classroom', 'user').order_by('-created_at')
+
+    context = {
+        'total_users': total_users,
+        'total_storybooks': total_storybooks,
+        'storybooks': storybooks
+    }
+    return render(request, 'admin/dashboard_lesson_admin.html', context)
+
+
+@login_required
+def user_list_view(request):
+    teachers = User.objects.filter(user_type='teacher')
+    students = User.objects.filter(user_type='student')
+
+    teacher_ids = TeacherID.objects.all()
+    teacher_id_map = {t.email: t.teacher_code for t in teacher_ids}
+
+    context = {
+        "teachers": teachers,
+        "students": students,
+        "teacher_id_map": teacher_id_map,  # ส่งไป template
+    }
+    return render(request, 'admin/user_list.html', context)
+
+
+def add_teacher_registry_view(request):
+    if request.method == "POST":
+        full_name = request.POST.get("full_name")
+        email = request.POST.get("email")
+        teacher_code = request.POST.get("teacher_id")
+
+        if not TeacherID.objects.filter(email=email, teacher_code=teacher_code).exists():
+            TeacherID.objects.create(
+                full_name=full_name,
+                email=email,
+                teacher_code=teacher_code
+            )
+            messages.success(request, "เพิ่มข้อมูลสำเร็จ")
+            return redirect("add_teacher_registry")  # หรือชื่อ path ที่คุณใช้
+        else:
+            messages.error(request, "มีครูคนนี้อยู่แล้ว")
+
+    # ✅ ดึงรายชื่อครูทั้งหมดมาส่งไปให้ template
+    registered_teachers = TeacherID.objects.all()
+
+    return render(request, "admin/add_teacher_registry.html", {
+        "registered_teachers": registered_teachers
+    })
+
+
+def delete_teacher_view(request, teacher_id):
+    if request.method == 'POST':
+        teacher = get_object_or_404(TeacherID, id=teacher_id)
+        teacher.delete()
+        messages.success(request, "ลบคุณครูเรียบร้อยแล้ว")
+    return redirect('add_teacher_registry')
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
+def delete_user_view(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    user.delete()
+    return redirect('user_list')
+
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
+def teacher_lesson_list_view(request, teacher_id):
+    teacher = get_object_or_404(User, id=teacher_id, user_type='teacher')
+    lessons = Lesson.objects.filter(user=teacher)  # ถ้ามี foreignkey เป็น user
+
+    context = {
+        "teacher": teacher,
+        "lessons": lessons,
+    }
+    return render(request, 'admin/teacher_lessons.html', context)
+
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
+def delete_teacher_lesson_view(request, lesson_id):
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    teacher_id = lesson.user.id
+    lesson.delete()
+    return redirect('teacher_lesson_list', teacher_id=teacher_id)
+
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
+def admin_view_lesson_detail(request, lesson_id):
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    storybook = Storybook.objects.filter(lesson=lesson).first()
+    scenes = storybook.scenes.all() if storybook else []
+
+    return render(request, 'admin/lesson_detail.html', {
+        'lesson': lesson,
+        'storybook': storybook,
+        'scenes': scenes
+    })
