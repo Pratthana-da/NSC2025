@@ -1,0 +1,51 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block content %}
+<div class="p-6 space-y-4">
+  <h2 class="text-2xl font-bold text-gray-800">บทเรียนของ {{ teacher.get_full_name }}</h2>
+
+  {% if lessons %}
+  <div class="overflow-x-auto bg-white rounded-lg shadow">
+    <table class="min-w-full text-sm text-left">
+      <thead class="bg-gray-100">
+        <tr class="text-gray-700">
+          <th class="px-4 py-3">#</th>
+          <th class="py-3">ชื่อบทเรียน</th>
+          <th class="py-3">วันที่สร้าง</th>
+          <th class="text-center py-3">จัดการ</th>
+        </tr>
+      </thead>
+      <tbody class="text-gray-700">
+        {% for lesson in lessons %}
+        <tr class="border-t hover:bg-gray-50">
+          <td class="px-4 py-3">{{ forloop.counter }}</td>
+          
+          <!-- ลิงก์ชื่อบทเรียน -->
+          <td class="py-3">
+            <a href="{% url 'admin_view_lesson_detail' lesson.id %}" class="text-blue-600 hover:underline font-medium">
+              {{ lesson.title }}
+            </a>
+          </td>
+          
+          <td class="py-3">{{ lesson.created_at|date:"d/m/Y H:i" }}</td>
+          
+          <!-- ปุ่มลบ -->
+          <td class="text-center py-3">
+            <form method="post" action="{% url 'delete_teacher_lesson' lesson.id %}" onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบบทเรียนนี้?');">
+              {% csrf_token %}
+              <button type="submit"
+                class="inline-flex items-center px-3 py-1 border border-red-300 text-red-600 text-sm rounded hover:bg-red-100 hover:text-red-700">
+                🗑 ลบ
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p class="text-gray-600">ยังไม่มีบทเรียนสำหรับครูคนนี้</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -90,6 +90,8 @@ class Storybook(models.Model):
     is_failed = models.BooleanField(default=False)
     is_uploaded = models.BooleanField(default=False)
     download_permission = models.CharField(max_length=10, choices=[('public', 'Public'), ('private', 'Private')], default='public')
+    lesson = models.ForeignKey('Lesson', on_delete=models.CASCADE, related_name='storybook', null=True, blank=True)
+
 
 class Scene(models.Model):
     storybook = models.ForeignKey(Storybook, related_name='scenes', on_delete=models.CASCADE)
@@ -98,7 +100,7 @@ class Scene(models.Model):
     image_prompt = models.TextField()
     image_url = models.URLField(max_length=1000, blank=True, null=True)
     audio_url = models.URLField(max_length=1000, blank=True, null=True)  # ✅ เพิ่ม
-
+    
 
 class PostTestQuestion(models.Model):
     storybook = models.ForeignKey(Storybook, on_delete=models.CASCADE, related_name='questions')
@@ -113,5 +115,27 @@ class PostTestQuestion(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+# class TeacherID(models.Model):
+#     full_name = models.CharField(max_length=255)
+#     email = models.EmailField(unique=True)
+#     teacher_code = models.CharField(max_length=20, unique=True)
 
+#     def __str__(self):
+#         return f"{self.full_name} ({self.teacher_code})"
 
+# class TeacherID(models.Model):
+#     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacher_id')
+#     teacher_code = models.CharField(max_length=20, unique=True)
+
+#     def __str__(self):
+#         return f"{self.user.get_full_name()} ({self.teacher_code})"
+    
+
+class TeacherID(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacher_id', null=True, blank=True)
+    full_name = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
+    teacher_code = models.CharField(max_length=20, unique=True)
+
+    def __str__(self):
+        return f"{self.full_name} ({self.teacher_code})"
