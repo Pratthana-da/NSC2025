@@ -528,16 +528,126 @@ def auth_view(request):
     })
 
 
+from django.shortcuts import render, redirect
+from .models import Classroom
+from django.contrib.auth.decorators import login_required
+
 @login_required
 def class_create_teacher(request):
-    if request.user.user_type == 'teacher':
-        classrooms = Classroom.objects.filter(teacher=request.user)
-    else:
-        classrooms = Classroom.objects.none()
+    if request.user.user_type != 'teacher':
+        return redirect('dashboard')  # ป้องกัน student เข้ามา
 
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        cover_image = request.FILES.get('cover_image')
+
+        classroom = Classroom.objects.create(
+            name=name,
+            teacher=request.user,
+            cover_image=cover_image
+        )
+
+        return redirect('classroom_home', classroom.id)
+
+    # ถ้า GET
+    classrooms = Classroom.objects.filter(teacher=request.user)
     return render(request, 'teacher/class_create.html', {
         'classrooms': classrooms
     })
+
+
+
+# classroom/views.py
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from .models import Storybook
+
+@login_required
+def lesson_history_teacher(request):
+    if request.user.user_type != 'teacher':
+        return redirect('home')
+
+    all_storybooks = Storybook.objects.filter(user=request.user, is_uploaded=True).order_by('-created_at')
+
+    latest_storybooks = all_storybooks[:3]  # ✅ ดึง 3 บทเรียนล่าสุด
+    storybooks = all_storybooks[3:]         # ✅ ส่วนที่เหลือ
+
+    return render(request, 'teacher/lesson_history.html', {
+        'latest_storybooks': latest_storybooks,
+        'storybooks': storybooks
+    })
+
+
+from django.db.models import Avg
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, get_object_or_404
+from .models import Storybook, PostTestSubmission
+from collections import defaultdict
+from django.db.models import Count
+
+@login_required
+def teacher_view_lesson_detail(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
+
+    # ดึงเฉพาะ submission ทั้งหมดของ storybook นี้
+    submissions = PostTestSubmission.objects.filter(storybook=storybook).select_related('user')
+
+    # ✅ นับจำนวนครั้งที่แต่ละ user ทำ
+    submission_counts = defaultdict(int)
+    for s in submissions:
+        submission_counts[s.user_id] += 1
+
+    # ✅ เก็บเฉพาะ submission ล่าสุดของแต่ละ user (เพื่อใช้แสดงข้อมูล)
+    latest_submissions = {}
+    for s in submissions.order_by('-submitted_at'):
+        if s.user_id not in latest_submissions:
+            latest_submissions[s.user_id] = s
+
+    # ✅ เตรียมข้อมูล list สำหรับ template
+    students = []
+    for user_id, latest_submission in latest_submissions.items():
+        students.append({
+            'user': latest_submission.user,
+            'submitted_at': latest_submission.submitted_at,
+            'count': submission_counts[user_id],  # <== จำนวนครั้งที่ทำ
+        })
+
+    total_submissions = submissions.count()
+    average_score = submissions.aggregate(avg=Avg('score'))['avg'] or 0
+    total_shares = 0
+
+    return render(request, 'teacher/lesson_detail_stats.html', {
+        'storybook': storybook,
+        'students': students,
+        'total_submissions': total_submissions,
+        'average_score': average_score,
+        'total_shares': total_shares,
+    })
+
+
+from django.shortcuts import render, get_object_or_404
+from .models import Storybook, PostTestSubmission, User
+
+@login_required
+def student_posttest_history(request, storybook_id, user_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id)
+    student = get_object_or_404(User, id=user_id)
+
+    submissions = PostTestSubmission.objects.filter(
+        user=student,
+        storybook=storybook
+    ).order_by('-submitted_at')
+
+    return render(request, 'teacher/student_posttest_history.html', {
+        'student': student,
+        'submissions': submissions,
+        'storybook': storybook
+    })
+
+
+
+
+
 
 @login_required
 def class_join_student(request):
@@ -666,8 +776,8 @@ def classroom_home(request, classroom_id):
         return redirect('class_join_create')
 
     if request.user == classroom.teacher:
-        # ✅ ครูเห็นเฉพาะ Storybook ที่ "ส่งงานแล้ว"
-        storybooks = classroom.storybooks.filter(user=request.user, is_uploaded=True).order_by('-created_at')
+        # ✅ ครูเห็นทุก storybook ของตัวเองในคลาสนี้ (ทั้งที่อัปโหลดแล้ว/ยัง)
+        storybooks = classroom.storybooks.filter(user=request.user).order_by('-created_at')
         template_name = 'teacher/classroom_home.html'
     else:
         # นักเรียนเห็นเฉพาะที่ "พร้อมใช้งาน"
@@ -678,6 +788,7 @@ def classroom_home(request, classroom_id):
         'classroom': classroom,
         'storybooks': storybooks
     })
+
 
 
 import json
