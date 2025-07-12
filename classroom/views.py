@@ -924,21 +924,21 @@ def delete_storybook(request, storybook_id):
 
     return redirect('admin_lesson_dashboard')
 
-@login_required
-def admin_lesson_dashboard(request):
-    if request.user.user_type != 'admin':
-        return redirect('select_role')  # class_join_createป้องกันคนอื่นเข้า
+# @login_required
+# def admin_lesson_dashboard(request):
+#     if request.user.user_type != 'admin':
+#         return redirect('select_role')  # class_join_createป้องกันคนอื่นเข้า
 
-    total_users = User.objects.exclude(user_type='admin').count()
-    total_storybooks = Storybook.objects.count()
-    storybooks = Storybook.objects.select_related('classroom', 'user').order_by('-created_at')
+#     total_users = User.objects.exclude(user_type='admin').count()
+#     total_storybooks = Storybook.objects.count()
+#     storybooks = Storybook.objects.select_related('classroom', 'user').order_by('-created_at')
 
-    context = {
-        'total_users': total_users,
-        'total_storybooks': total_storybooks,
-        'storybooks': storybooks
-    }
-    return render(request, 'admin/dashboard_lesson_admin.html', context)
+#     context = {
+#         'total_users': total_users,
+#         'total_storybooks': total_storybooks,
+#         'storybooks': storybooks
+#     }
+#     return render(request, 'admin/dashboard_lesson_admin.html', context)
 
 
 @login_required
@@ -996,6 +996,7 @@ def delete_user_view(request, user_id):
     user.delete()
     return redirect('user_list')
 
+@login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
 def teacher_lesson_list_view(request, teacher_id):
     teacher = get_object_or_404(User, id=teacher_id, user_type='teacher')
@@ -1007,21 +1008,106 @@ def teacher_lesson_list_view(request, teacher_id):
     }
     return render(request, 'admin/teacher_lessons.html', context)
 
+# @login_required
+# @user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
+# def delete_teacher_lesson_view(request, lesson_id):
+#     lesson = get_object_or_404(Lesson, id=lesson_id)
+#     teacher_id = lesson.user.id
+#     lesson.delete()
+#     return redirect('teacher_lesson_list', teacher_id=teacher_id)
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
+def delete_teacher_storybook_view(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id)
+    teacher_id = storybook.user.id
+    storybook.delete()
+    return redirect('teacher_storybooks_admin', teacher_id=teacher_id)
+
+@login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
 def delete_teacher_lesson_view(request, lesson_id):
     lesson = get_object_or_404(Lesson, id=lesson_id)
     teacher_id = lesson.user.id
     lesson.delete()
-    return redirect('teacher_lesson_list', teacher_id=teacher_id)
+    return redirect('teacher_storybooks_admin', teacher_id=teacher_id)
+# @login_required
+# @user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
+# def admin_view_lesson_detail(request, lesson_id):
+#     # lesson = get_object_or_404(Lesson, id=lesson_id)
+#     storybook = Storybook.objects.filter(lesson=lesson).first()
+#     scenes = storybook.scenes.order_by('scene_number')  
+#     # scenes = storybook.scenes.all() if storybook else []
 
+#     context = {
+#         'storybook': storybook,
+#         'scenes': scenes,
+#     }
+#     return render(request, 'admin/lesson_detail.html', context)
+    # return render(request, 'admin/lesson_detail.html', {
+    #     'lesson': lesson,
+    #     'storybook': storybook,
+    #     'scenes': scenes
+    # })
+@login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
-def admin_view_lesson_detail(request, lesson_id):
-    lesson = get_object_or_404(Lesson, id=lesson_id)
-    storybook = Storybook.objects.filter(lesson=lesson).first()
-    scenes = storybook.scenes.all() if storybook else []
-
-    return render(request, 'admin/lesson_detail.html', {
-        'lesson': lesson,
+def admin_view_lesson_detail(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id)
+    scenes = storybook.scenes.order_by('scene_number')
+    return render(request, 'admin/view_lesson_detail.html', {
         'storybook': storybook,
-        'scenes': scenes
+        'scenes': scenes,
     })
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
+def teacher_storybooks_admin_view(request, teacher_id):
+    teacher = get_object_or_404(User, id=teacher_id)
+    storybooks = Storybook.objects.filter(user=teacher).order_by('-created_at')
+    return render(request, 'admin/teacher_storybooks.html', {
+        'teacher': teacher,
+        'storybooks': storybooks,
+    })
+
+# @login_required
+# @user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')  # หรือใช้ is_staff แล้วแต่สิทธิ์แอดมินของคุณ
+# def admin_reported_lessons_view(request):
+#     reports = Report.objects.select_related('storybook', 'user').order_by('-created_at')
+#     return render(request, 'admin/dashboard_lesson_admin.html', {
+#         'reports': reports,
+#         'total_users': User.objects.count(),
+#         'total_storybooks': Storybook.objects.count(),
+#     })
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
+def admin_reported_lessons_view(request):
+    reports = Report.objects.select_related('storybook', 'user').order_by('-created_at')
+    total_users = User.objects.exclude(user_type='admin').count()
+    total_storybooks = Storybook.objects.count()
+    storybooks = Storybook.objects.select_related('classroom', 'user').order_by('-created_at')
+
+    return render(request, 'admin/dashboard_lesson_admin.html', {
+        'reports': reports,
+        'total_users': total_users,
+        'total_storybooks': total_storybooks,
+        'storybooks': storybooks,
+    })
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
+def admin_report_detail_view(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id)
+    reports = Report.objects.filter(storybook=storybook).select_related('user')
+    return render(request, 'admin/report_detail.html', {
+        'storybook': storybook,
+        'reports': reports,
+    })
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
+def delete_reported_storybook(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id)
+    storybook.delete()
+    messages.success(request, "ลบบทเรียนเรียบร้อยแล้ว")
+    return redirect('admin_reported_lessons')
