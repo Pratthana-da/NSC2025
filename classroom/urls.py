@@ -50,6 +50,11 @@ urlpatterns = [
 
     path('final/<int:storybook_id>/', views.final, name='final'),
 
+    path('lesson-history/', views.lesson_history_teacher, name='teacher_lesson_history'), 
+    path('lesson/<int:storybook_id>/', views.teacher_view_lesson_detail, name='teacher_view_lesson_detail'),
+    path('lesson/<int:storybook_id>/student/<int:user_id>/posttest-history/', views.student_posttest_history, name='student_posttest_history'),
+
+
     path('storybook/<int:storybook_id>/cancel/', views.cancel_storybook, name='cancel_storybook'),
     path('student/storybook/<int:storybook_id>/post-test/', views.take_post_test, name='take_post_test'),
     path('student/post-test/result/<int:submission_id>/', views.post_test_result, name='post_test_result'),
