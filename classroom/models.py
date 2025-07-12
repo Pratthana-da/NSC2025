@@ -46,6 +46,7 @@ class Classroom(models.Model):
     is_approved = models.BooleanField(default=False)
     approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_classes')
     created_at = models.DateTimeField(auto_now_add=True)
+    cover_image = models.ImageField(upload_to='classroom_covers/', null=True, blank=True)
     
     def save(self, *args, **kwargs):
         if not self.code:
