@@ -30,7 +30,8 @@ urlpatterns = [
     path('classroom/<uuid:classroom_id>/create-upload-video/', views.upload_lesson_file_video, name='upload_lesson_file_video'),
     path('notifications/', views.notifications_view, name='notifications'),
     path('admin/lesson/delete/<int:storybook_id>/', views.delete_storybook, name='delete_storybook'),
-    path('school-admin/dashboard/', views.admin_lesson_dashboard, name='admin_lesson_dashboard'),
+    # path('school-admin/dashboard/', views.admin_lesson_dashboard, name='admin_lesson_dashboard'),
+    path('school-admin/dashboard/', views.admin_reported_lessons_view, name='admin_lesson_dashboard'),
 
     path('school-admin/user-list/', views.user_list_view, name='user_list'),
     path("school-admin/add-teacher/", views.add_teacher_registry_view, name="add_teacher_registry"),
@@ -38,7 +39,14 @@ urlpatterns = [
     path('school-admin/delete-user/<int:user_id>/', views.delete_user_view, name='delete_user'),
     path('school-admin/teacher/<int:teacher_id>/lessons/', views.teacher_lesson_list_view, name='teacher_lesson_list'),
     path('school-admin/teacher/lesson/<int:lesson_id>/delete/', views.delete_teacher_lesson_view, name='delete_teacher_lesson'),
-    path('school-admin/teacher/lesson/<int:lesson_id>/', views.admin_view_lesson_detail, name='admin_view_lesson_detail'),
+    # path('school-admin/teacher/lesson/<int:lesson_id>/', views.admin_view_lesson_detail, name='admin_view_lesson_detail'),
+    path('school-admin/reported-lessons/', views.admin_reported_lessons_view, name='admin_reported_lessons'),
+    path('school-admin/report/<int:storybook_id>/', views.admin_report_detail_view, name='admin_report_detail'),
+    path('school-admin/delete-storybook/<int:storybook_id>/', views.delete_reported_storybook, name='delete_reported_storybook'),
+    path('school-admin/teacher/storybooks/<int:teacher_id>/', views.teacher_storybooks_admin_view, name='teacher_storybooks_admin'),
+    path('school-admin/teacher/lesson/<int:storybook_id>/', views.admin_view_lesson_detail, name='admin_view_lesson_detail'),
+    path('school-admin/teacher/storybook/delete/<int:storybook_id>/', views.delete_teacher_storybook_view, name='delete_teacher_storybook'),
+
 
     path('storybook/<int:storybook_id>/view/', views.teacher_view_storybook, name='detail_lesson'),
     path('storybook/<int:storybook_id>/view-uploaded/', views.view_uploaded_lesson, name='view_uploaded_lesson'),

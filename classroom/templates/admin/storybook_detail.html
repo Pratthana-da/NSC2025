@@ -1,0 +1,22 @@
+{% extends 'admin/base_admin.html' %}
+{% block content %}
+
+<h2 class="text-2xl font-bold text-gray-800 mt-6">เนื้อหาบทเรียน: {{ storybook.title }}</h2>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+  {% for scene in scenes %}
+  <div class="bg-white p-4 rounded shadow space-y-2">
+    <img src="{{ scene.image_url }}" class="rounded w-full h-40 object-cover" alt="Scene {{ scene.scene_number }}">
+    <p><strong>Scene {{ scene.scene_number }}</strong></p>
+    <p class="text-sm text-gray-700">{{ scene.text }}</p>
+    {% if scene.audio_url %}
+    <audio controls class="w-full">
+      <source src="{{ scene.audio_url }}" type="audio/mpeg">
+      เบราว์เซอร์ไม่รองรับเสียง
+    </audio>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

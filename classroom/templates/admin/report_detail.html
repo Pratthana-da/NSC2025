@@ -1,0 +1,33 @@
+{% extends 'admin/base_admin.html' %}
+{% block content %}
+
+<div class="max-w-5xl mx-auto py-10 space-y-6">
+
+  <h2 class="text-2xl font-bold text-gray-700">การรายงานบทเรียน: {{ storybook.title }}</h2>
+
+  {% for report in reports %}
+  <div class="bg-white rounded-xl shadow p-6 flex gap-4">
+    <img src="{{ storybook.cover_image_url|default:'https://via.placeholder.com/120' }}" class="w-28 h-28 rounded-lg object-cover" alt="">
+
+    <div class="flex-1 space-y-2">
+      <h3 class="text-lg font-bold text-gray-800">เหตุผลในการรายงาน / {{ report.reason }}</h3>
+      <p class="text-gray-600 text-sm">{{ report.detail }}</p>
+      <p class="text-sm text-gray-400">
+        โดย: {{ report.user.get_full_name|default:report.user.email|default:"ไม่ทราบผู้ใช้" }} |
+        วันที่: {{ report.created_at|date:"d M Y H:i" }}
+      </p>
+    </div>
+
+    <form method="post" action="{% url 'delete_reported_storybook' storybook.id %}">
+      {% csrf_token %}
+      <button type="submit" class="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded">ลบบทเรียน</button>
+    </form>
+  </div>
+  {% endfor %}
+
+  {% if not reports %}
+    <p class="text-center text-gray-400 py-10">ไม่มีรายงานสำหรับบทเรียนนี้</p>
+  {% endif %}
+
+</div>
+{% endblock %}
