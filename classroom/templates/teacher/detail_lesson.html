@@ -81,68 +81,68 @@
     </div>
 
 
-    <div class="flex justify-center mt-6">
+    <!-- <div class="flex justify-center mt-6">
         <button id="Edit-Lesson" type="button"
             class="w-full sm:w-64 px-6 py-3 rounded-xl bg-gray-800 text-white hover:bg-gray-700 transition">
             Edit Lesson
         </button>
-    </div>
+    </div> -->
 
 
     <!-- Lesson Metadata Form -->
     <form id="lesson-form" class="space-y-6">
         <div>
-            <label class="block text-sm font-medium text-gray-700">Lesson Name</label>
+            <label class="block text-sm font-medium text-gray-700">ชื่อบทเรียน</label>
             <input id="lesson-name" type="text" value="{{ storybook.title }}"
                 class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3"
-                placeholder="Enter lesson name">
+                placeholder="ใส่ชื่อบทเรียน">
         </div>
         <div>
-            <label class="block text-sm font-medium text-gray-700">Creator</label>
+            <label class="block text-sm font-medium text-gray-700">ชื่อผู้สร้าง</label>
             <input id="lesson-creator" type="text"
                 value="{{ storybook.user.get_full_name|default:storybook.user.email }}"
-                class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3" placeholder="Creator name">
+                class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3" placeholder="ใส่ชื่อผู้สร้าง">
         </div>
         <div>
-            <label class="block text-sm font-medium text-gray-700">Description</label>
+            <label class="block text-sm font-medium text-gray-700">รายละเอียด</label>
             <textarea id="lesson-description" type="text"
                 class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3"
-                placeholder="Description of the lesson"></textarea>
+                placeholder="ใส่รายละเอียดบทเรียนที่นี่"></textarea>
             <div>
-                <label class="block text-sm font-medium text-gray-700">Additional Content</label>
+                <label class="block text-sm font-medium text-gray-700">รายละเอียดเนื้อหาบทเรียนเพิ่มเติม</label>
                 <textarea id="lesson-additional"
                     class="w-full border border-dashed border-blue-400 rounded-lg px-4 py-3"
-                    placeholder="Additional Content here"></textarea>
+                    placeholder="ใส่รายละเอียดเนื้อหาบทเรียนเพิ่มเติมที่นี่"></textarea>
             </div>
     </form>
 
     <!-- 📥 Download Permission Section -->
     <div class="space-y-2 mt-10">
-        <h3 class="text-lg font-semibold text-gray-900">Downloading</h3>
-        <p class="text-sm text-gray-500">Lesson Recording</p>
+        <h3 class="text-lg font-semibold text-gray-900">การดาวน์โหลด</h3>
+        <p class="text-sm text-gray-500">กำหนดสิทธิ์การดาวน์โหลดบทเรียน</p>
 
         <div class="flex flex-col space-y-4 mt-2">
             <!-- ✅ Anyone can download -->
             <label class="flex items-center gap-2 cursor-pointer">
                 <input type="radio" name="download_permission" value="public" checked class="accent-blue-600 w-4 h-4">
-                <span class="text-gray-800 text-sm">Public Anyone can download your Lessons</span>
+                <span class="text-gray-800 text-sm">สามารถดาวน์โหลดบทเรียนของคุณได้</span>
             </label>
 
             <!-- 🚫 Can't download -->
             <label class="flex items-center gap-2 cursor-pointer">
                 <input type="radio" name="download_permission" value="private" class="accent-gray-400 w-4 h-4">
-                <span class="text-gray-500 text-sm">Public Anyone can’t download your Lessons</span>
+                <span class="text-gray-500 text-sm">ไม่สามารถดาวน์โหลดบทเรียนของคุณได้</span>
             </label>
         </div>
     </div>
 
     <!-- Post Test Assignment -->
-    <h3 class="text-xl font-bold text-gray-800 mt-10">Post Test Assignment</h3>
+    <h3 class="text-xl font-bold text-gray-800 mt-10">แบบทดสอบท้ายบท</h3>
     <div id="question-container" class="space-y-6 mt-6"></div>
     <div class="flex justify-center mt-6">
         <button id="add-question-btn" type="button"
             class="px-6 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700 transition">
-            + Add questions
+            + เพิ่มแบบทดสอบ
         </button>
     </div>
 
@@ -154,7 +154,7 @@
             {% csrf_token %}
             <button type="button" onclick="confirmCancel()"
                 class="w-full sm:w-64 px-6 py-3 rounded-xl bg-gray-800 text-white hover:bg-gray-700 transition">
-                Cancel
+                ยกเลิก
             </button>
         </form>
 
@@ -166,7 +166,7 @@
             <input type="hidden" name="title" id="hidden-lesson-title">
             <button id="upload-btn" type="submit"
                 class="w-full px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition">
-                Upload Work
+                อัปโหลดงาน
             </button>
         </form>
     </div>
