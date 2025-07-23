@@ -295,6 +295,31 @@ def student_view_storybook(request, storybook_id):
     return render(request, 'student/detail_lesson_student.html', context)
 
 
+# views.py
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, render
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+from .models import Storybook
+
+@require_POST
+@login_required
+def toggle_favorite(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id)
+    if request.user in storybook.favorites.all():
+        storybook.favorites.remove(request.user)
+    else:
+        storybook.favorites.add(request.user)
+    return JsonResponse({'success': True})
+
+@login_required
+def student_favorites(request):
+    storybooks = Storybook.objects.filter(favorites=request.user)
+    return render(request, 'student/favorite_list.html', {'storybooks': storybooks})
+
+
+
+
 def student_display_lesson(request, lesson_id):
     lesson = get_object_or_404(Lesson, id=lesson_id)
     return render(request, 'teacher/student_display_lesson.html', {'lesson': lesson})
@@ -863,21 +888,28 @@ def link_callback(uri, rel):
         return uri
     return path
 
+from django.http import HttpResponseForbidden
+
 def export_lesson_pdf(request, storybook_id):
-    storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
-    # โหลดข้อมูล scenes มาเรียง
+    storybook = get_object_or_404(Storybook, id=storybook_id)
+
+    # ตรวจสอบสิทธิ์: ถ้าเป็นครูเจ้าของ หรือ นักเรียนที่ดูได้
+    is_owner = storybook.user == request.user
+    is_student_viewer = request.user.user_type == 'student'  # หรือจะตรวจสอบว่าลงทะเบียนชั้นเรียนนี้ก็ได้
+
+    if not (is_owner or is_student_viewer):
+        return HttpResponseForbidden("คุณไม่มีสิทธิ์ดาวน์โหลดบทเรียนนี้")
+
     scenes = storybook.scenes.order_by('scene_number')
-    # เรนเดอร์เป็น HTML ด้วย template ใหม่
     html = render_to_string('teacher/lesson_detail_for_pdf.html', {
         'storybook': storybook,
         'scenes': scenes,
     }, request=request)
 
-    # สร้าง PDF ลงใน buffer
     buffer = io.BytesIO()
     pisa_status = pisa.CreatePDF(src=html, dest=buffer, link_callback=link_callback)
     if pisa_status.err:
-        return HttpResponse('❌ เกิดข้อผิดพลาดในการสร้าง PDF', status=500)
+        return HttpResponse('เกิดข้อผิดพลาดในการสร้าง PDF', status=500)
 
     buffer.seek(0)
     return HttpResponse(
@@ -887,6 +919,7 @@ def export_lesson_pdf(request, storybook_id):
             'Content-Disposition': f'attachment; filename="lesson_{storybook.id}.pdf"'
         }
     )
+
 
 
 
@@ -926,7 +959,13 @@ def delete_classroom(request, classroom_id):
 
 @login_required
 def license_view(request):
-    return render(request, 'teacher/license.html')  
+    if request.user.user_type == 'teacher':
+        return render(request, 'teacher/license.html')
+    elif request.user.user_type == 'student':
+        return render(request, 'student/license.html')
+    else:
+        return redirect('home')  
+ 
 
 import json
 from django.contrib import messages

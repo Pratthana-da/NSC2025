@@ -66,7 +66,9 @@ urlpatterns = [
     path('classroom/<uuid:classroom_id>/delete/', views.delete_classroom, name='delete_classroom'),
     path('license/', views.license_view, name='license'),
     path('lessons/create/<uuid:classroom_id>/', views.create_lesson_for_classroom, name='create_lesson_for_classroom'),
-
+# classroom/urls.py
+    path('storybook/<int:storybook_id>/toggle-favorite/', views.toggle_favorite, name='toggle_favorite'),
+    path('favorites/', views.student_favorites, name='student_favorites'),
 
 
 
