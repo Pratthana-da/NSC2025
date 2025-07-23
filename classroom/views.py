@@ -16,6 +16,7 @@ from .forms import SecureUserCreationForm, SecureAuthenticationForm, JoinClassro
 import logging
 from django.http import HttpResponse 
 from django.shortcuts import redirect, render
+from django.db.models import OuterRef, Subquery, Prefetch, Max, F 
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -189,63 +190,129 @@ from .models import Storybook, PostTestQuestion, PostTestSubmission, PostTestAns
 from django.contrib.auth.decorators import login_required
 import random
 
+# @login_required
+# def take_post_test(request, storybook_id):
+#     storybook = get_object_or_404(Storybook, id=storybook_id)
+#     questions = list(PostTestQuestion.objects.filter(storybook=storybook))
+
+#     if request.method == 'POST':
+#         total_correct = 0
+#         submission = PostTestSubmission.objects.create(
+#             user=request.user,
+#             storybook=storybook,
+#             score=0
+#         )
+
+#         for question in questions:
+#             selected = request.POST.get(f'question_{question.id}')
+#             if selected:
+#                 selected = int(selected)
+#                 PostTestAnswer.objects.create(
+#                     submission=submission,
+#                     question=question,
+#                     selected_choice=selected
+#                 )
+#                 if selected == question.correct_choice:
+#                     total_correct += 1
+
+#         submission.score = total_correct
+#         submission.save()
+#         # return redirect('post_test_result', submission.id)
+
+#     # สุ่ม choices สำหรับแต่ละคำถาม
+#     randomized_questions = []
+#     for q in questions:
+#         choices = [
+#             (1, q.choice_1),
+#             (2, q.choice_2),
+#             (3, q.choice_3),
+#             (4, q.choice_4),
+#         ]
+#         random.shuffle(choices)
+#         randomized_questions.append({
+#             'question': q,
+#             'choices': choices
+#         })
+
+#     return render(request, 'student/post_test_form.html', {
+#         'storybook': storybook,
+#         'randomized_questions': randomized_questions,
+#     })
+
+
+# @login_required
+# def post_test_result(request, submission_id):
+#     submission = get_object_or_404(PostTestSubmission, id=submission_id, user=request.user)
+#     answers = submission.answers.all()
+
+#     return render(request, 'student/post_test_result.html', {
+#         'submission': submission,
+#         'answers': answers
+#     })
+
 @login_required
 def take_post_test(request, storybook_id):
     storybook = get_object_or_404(Storybook, id=storybook_id)
-    questions = list(PostTestQuestion.objects.filter(storybook=storybook))
+    # questions = list(PostTestQuestion.objects.filter(storybook=storybook))
+    questions = list(storybook.questions.all())
 
     if request.method == 'POST':
-        total_correct = 0
+        # สร้าง submission และบันทึกคำตอบ + คำนวณคะแนน
         submission = PostTestSubmission.objects.create(
             user=request.user,
             storybook=storybook,
             score=0
         )
-
-        for question in questions:
-            selected = request.POST.get(f'question_{question.id}')
-            if selected:
-                selected = int(selected)
+        total_correct = 0
+        for q in questions:
+            sel = request.POST.get(f'question_{q.id}')
+            if sel:
+                sel = int(sel)
                 PostTestAnswer.objects.create(
                     submission=submission,
-                    question=question,
-                    selected_choice=selected
+                    question=q,
+                    selected_choice=sel
                 )
-                if selected == question.correct_choice:
+                if sel == q.correct_choice:
                     total_correct += 1
-
         submission.score = total_correct
         submission.save()
-        return redirect('post_test_result', submission.id)
+        # **Redirect ไปหน้า quiz_result**
+        return redirect('quiz_result', submission.id)
 
-    # สุ่ม choices สำหรับแต่ละคำถาม
+    # GET: สุ่ม choices แล้ว render form
     randomized_questions = []
     for q in questions:
-        choices = [
-            (1, q.choice_1),
-            (2, q.choice_2),
-            (3, q.choice_3),
-            (4, q.choice_4),
-        ]
+        choices = [(1, q.choice_1), (2, q.choice_2),
+                   (3, q.choice_3), (4, q.choice_4)]
         random.shuffle(choices)
-        randomized_questions.append({
-            'question': q,
-            'choices': choices
-        })
+        randomized_questions.append({'question': q, 'choices': choices})
 
     return render(request, 'student/post_test_form.html', {
         'storybook': storybook,
         'randomized_questions': randomized_questions,
     })
 
+
+@login_required
+def quiz_result(request, submission_id):
+    # แสดงคะแนน + ปุ่มไปดูรายละเอียด / กลับ
+    submission = get_object_or_404(PostTestSubmission, id=submission_id, user=request.user)
+    total_questions = submission.storybook.questions.count()
+    return render(request, 'student/quiz_result.html', {
+        'submission': submission,
+        'total_questions': total_questions,
+    })
+
+
 @login_required
 def post_test_result(request, submission_id):
+    # รายละเอียดคำตอบแต่ละข้อ
     submission = get_object_or_404(PostTestSubmission, id=submission_id, user=request.user)
     answers = submission.answers.all()
-
     return render(request, 'student/post_test_result.html', {
         'submission': submission,
-        'answers': answers
+        'answers': answers,
     })
 
 
@@ -1111,3 +1178,64 @@ def delete_reported_storybook(request, storybook_id):
     storybook.delete()
     messages.success(request, "ลบบทเรียนเรียบร้อยแล้ว")
     return redirect('admin_reported_lessons')
+
+@login_required
+def student_lesson_history_view(request):
+    user = request.user
+
+    # Subquery เพื่อหา id ของ submission ล่าสุด (ล่าสุดต่อ storybook)
+    latest_subquery = (
+        PostTestSubmission.objects
+        .filter(user=user, storybook=OuterRef('storybook'))
+        .order_by('-submitted_at')
+        .values('id')[:1]
+    )
+
+    # Filter เฉพาะ submission ที่ id ตรงกับ submission ล่าสุดต่อ storybook
+    submissions = (
+        PostTestSubmission.objects
+        .filter(id__in=Subquery(latest_subquery))
+        .select_related('storybook')
+        .prefetch_related('storybook__scenes')
+        .order_by('-submitted_at')
+    )
+
+    for sub in submissions:
+        sub.total_questions = PostTestQuestion.objects.filter(storybook=sub.storybook).count()
+
+    return render(request, 'student/lesson_history.html', {
+        'submissions': submissions,
+    })
+
+
+@login_required
+def student_lesson_detail_history(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id)
+    submissions = PostTestSubmission.objects.filter(user=request.user, storybook=storybook).order_by('-submitted_at')
+    total_questions = PostTestQuestion.objects.filter(storybook=storybook).count()
+    passing_score = total_questions * 0.6  # 60% ถือว่าผ่าน
+
+    scenes = storybook.scenes.all()  # ✅ ดึงฉากทั้งหมดของ storybook
+    cover_scene = scenes.first()     # ✅ เอาฉากแรกเป็นปก
+    cover_image_url = cover_scene.image_url if cover_scene else None  # ป้องกันกรณีไม่มีฉากเลย
+
+    return render(request, 'student/lesson_detail_with_score.html', {
+        'storybook': storybook,
+        'submissions': submissions,
+        'total_questions': total_questions,
+        'passing_score': passing_score,
+        'cover_image_url': cover_image_url,
+    })
+
+def lesson_detail_with_score(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id)
+    submissions = PostTestSubmission.objects.filter(user=request.user, storybook=storybook).order_by('-submitted_at')
+    total_questions = PostTestQuestion.objects.filter(storybook=storybook).count()
+    passing_score = total_questions * 0.6  # 60% ผ่าน
+
+    return render(request, 'student/lesson_detail_with_score.html', {
+        'storybook': storybook,
+        'submissions': submissions,
+        'total_questions': total_questions,
+        'passing_score': passing_score,
+    })
