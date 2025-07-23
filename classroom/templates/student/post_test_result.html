@@ -18,18 +18,27 @@
         <!-- ข้อคำถาม -->
         <p class="font-medium mb-2">{{ forloop.counter }}. {{ ans.question.question_text }}</p>
 
-        <!-- กล่องคำตอบของผู้ใช้ -->
-        <div class="bg-white p-3 rounded-md">
-          <label class="inline-flex items-center">
-            <input type="radio" checked class="form-radio text-indigo-600" disabled>
-            <span class="ml-2 text-gray-800">{{ ans.selected_choice }}</span>
-          </label>
-        </div>
-
+      <!-- กล่องคำตอบของผู้ใช้ -->
+      <div class="bg-white p-3 rounded-md">
+        <label class="inline-flex items-center">
+          <input type="radio" checked class="form-radio text-indigo-600" disabled>
+          <span class="ml-2 text-gray-800">
+            {% if ans.selected_choice == 1 %}
+            {{ ans.question.choice_1 }}
+            {% elif ans.selected_choice == 2 %}
+            {{ ans.question.choice_2 }}
+            {% elif ans.selected_choice == 3 %}
+            {{ ans.question.choice_3 }}
+            {% elif ans.selected_choice == 4 %}
+            {{ ans.question.choice_4 }}
+            {% endif %}
+          </span>
+        </label>
+      </div>
         <!-- ข้อความสรุปผล -->
         {% if ans.selected_choice == ans.question.correct_choice %}
           <p class="mt-2 text-green-700 text-sm">
-            ✅ ถูกต้อง
+            <i class="bi bi-patch-check-fill"></i> ถูกต้อง
             {% if ans.question.explanation %}
               <span class="ml-2">หมายเหตุ: {{ ans.question.explanation }}</span>
             {% endif %}
@@ -42,3 +51,11 @@
   </div>
 </div>
 {% endblock %}
+
+
+
+
+
+
+
+

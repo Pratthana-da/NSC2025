@@ -77,7 +77,7 @@ class Lesson(models.Model):
         return self.title
     
 
-
+from django.db import models
 # models.py
 class Storybook(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -91,6 +91,7 @@ class Storybook(models.Model):
     is_uploaded = models.BooleanField(default=False)
     download_permission = models.CharField(max_length=10, choices=[('public', 'Public'), ('private', 'Private')], default='public')
     lesson = models.ForeignKey('Lesson', on_delete=models.CASCADE, related_name='storybook', null=True, blank=True)
+    favorites = models.ManyToManyField(User, related_name='favorite_storybooks', blank=True)
 
 
 class Scene(models.Model):
