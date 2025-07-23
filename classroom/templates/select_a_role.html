@@ -10,24 +10,15 @@
 </head>
 
 <body class="bg-white flex items-center justify-center min-h-screen font-sans">
-
   <div class="w-full max-w-md px-6 text-center space-y-10">
-
-    <!-- โลโก้ -->
     <img src="{% static 'images/logo01.png' %}" alt="illustration" class="w-64 mx-auto" />
-
     <p class="text-gray-800 text-lg font-medium">เลือกบทบาทเพื่อเริ่มต้นใช้งาน</p>
-
-    <!-- ✅ ปุ่มหลัก 2 ปุ่ม (แนวนอน) -->
     <div class="flex flex-col sm:flex-row justify-center gap-4">
-
-      <!-- ปุ่มครู -->
       <button type="button" onclick="showTeacherForm()"
         class="w-full sm:w-1/2 bg-gray-900 text-white px-6 py-3 rounded-full font-semibold hover:bg-gray-700 transition text-lg">
         สร้างชั้นเรียน
       </button>
 
-      <!-- ปุ่มนักเรียน -->
       <form method="post" action="{% url 'select_role' %}" class="w-full sm:w-1/2">
         {% csrf_token %}
         <input type="hidden" name="role" value="student">
@@ -38,7 +29,6 @@
       </form>
     </div>
 
-    <!-- ✅ ฟอร์มครู (แสดงหลังจากกดปุ่ม) -->
     <form method="post" action="{% url 'select_role' %}" id="teacher-form"
       class="hidden space-y-4 bg-gray-50 p-6 rounded-xl border mt-6">
       {% csrf_token %}
@@ -53,7 +43,6 @@
       </button>
     </form>
 
-    <!-- ✅ แสดงข้อความ error -->
     {% if messages %}
     <div class="text-red-600 font-medium">
       {% for message in messages %}

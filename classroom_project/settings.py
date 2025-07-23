@@ -181,7 +181,7 @@ WSGI_APPLICATION = 'classroom_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'aistorybook'),
+        'NAME': os.environ.get('DB_NAME', 'ainsc'),
         'USER': os.environ.get('DB_USER', 'postgres'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'Prabenz@34839'),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
@@ -227,7 +227,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Login settings
 LOGIN_URL = '/auth/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = 'select_role'
 LOGOUT_REDIRECT_URL = '/auth/'
 
 # Rate limiting
