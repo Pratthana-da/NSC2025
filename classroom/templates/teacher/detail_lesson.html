@@ -5,7 +5,6 @@
 {% block content %}
 <div class="max-w-5xl mx-auto px-4 py-10 space-y-10">
 
-    <!-- Lesson Header -->
     <h1 class="text-2xl font-bold text-gray-800">{{ storybook.title }}</h1>
     <p class="text-gray-500 text-sm">By {{ storybook.user.get_full_name|default:storybook.user.email }}</p>
 
@@ -30,7 +29,7 @@
             {% endfor %}
         </div>
 
-        <!-- ✅ ปุ่ม Prev / Next ติดขอบซ้าย-ขวา กลางแนวตั้ง -->
+
         <button id="prev-btn"
             class="absolute top-1/2 left-0 -translate-y-1/2 px-3 py-2 bg-white text-gray-700 rounded-r-lg shadow hover:bg-gray-200 transition z-30">
             ⬅
@@ -45,12 +44,11 @@
     <div class="flex items-center justify-between text-gray-600 text-sm mt-4">
         <button id="player-toggle"
             class="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow hover:bg-gray-100 transition">
-            <!-- ▶️ Icon: เล่น -->
             <svg id="icon-play" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800" viewBox="0 0 24 24"
                 fill="currentColor">
                 <path d="M8 5v14l11-7z" />
             </svg>
-            <!-- ⏸️ Icon: หยุด -->
+
             <svg id="icon-pause" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800 hidden"
                 viewBox="0 0 24 24" fill="currentColor">
                 <path d="M6 4h4v16H6zM14 4h4v16h-4z" />
@@ -59,18 +57,15 @@
 
         <div class="flex items-center gap-3">
             <span class="text-gray-700 font-medium">01:00</span>
-            <!-- 🔈 ปุ่มเปิด/ปิดเสียง -->
             <button id="mute-btn"
                 class="flex items-center justify-center w-9 h-9 rounded-full bg-white shadow hover:bg-gray-100 transition">
-                <!-- ไอคอนเปิดเสียง -->
+
                 <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800"
                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5z" />
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a9 9 0 010 12.73" />
                 </svg>
-
-                <!-- ไอคอนปิดเสียง -->
                 <svg id="icon-sound-off" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-800 hidden"
                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 14M15 5l-7 14" />
@@ -79,14 +74,6 @@
 
         </div>
     </div>
-
-
-    <!-- <div class="flex justify-center mt-6">
-        <button id="Edit-Lesson" type="button"
-            class="w-full sm:w-64 px-6 py-3 rounded-xl bg-gray-800 text-white hover:bg-gray-700 transition">
-            Edit Lesson
-        </button>
-    </div> -->
 
 
     <!-- Lesson Metadata Form -->
@@ -116,19 +103,19 @@
             </div>
     </form>
 
-    <!-- 📥 Download Permission Section -->
+    <!-- Download Permission Section -->
     <div class="space-y-2 mt-10">
         <h3 class="text-lg font-semibold text-gray-900">การดาวน์โหลด</h3>
         <p class="text-sm text-gray-500">กำหนดสิทธิ์การดาวน์โหลดบทเรียน</p>
 
         <div class="flex flex-col space-y-4 mt-2">
-            <!-- ✅ Anyone can download -->
+            <!-- Anyone can download -->
             <label class="flex items-center gap-2 cursor-pointer">
                 <input type="radio" name="download_permission" value="public" checked class="accent-blue-600 w-4 h-4">
                 <span class="text-gray-800 text-sm">สามารถดาวน์โหลดบทเรียนของคุณได้</span>
             </label>
 
-            <!-- 🚫 Can't download -->
+            <!-- Can't download -->
             <label class="flex items-center gap-2 cursor-pointer">
                 <input type="radio" name="download_permission" value="private" class="accent-gray-400 w-4 h-4">
                 <span class="text-gray-500 text-sm">ไม่สามารถดาวน์โหลดบทเรียนของคุณได้</span>
@@ -149,7 +136,7 @@
     <!-- Upload Buttons -->
     <div class="mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
 
-        <!-- ❌ ปุ่ม Cancel แบบ submit ลบ -->
+        <!-- ปุ่ม Cancel แบบ submit ลบ -->
         <form id="cancel-form" action="{% url 'cancel_storybook' storybook.id %}" method="post">
             {% csrf_token %}
             <button type="button" onclick="confirmCancel()"
@@ -158,7 +145,7 @@
             </button>
         </form>
 
-        <!-- ✅ ปุ่ม Upload Work -->
+        <!-- ปุ่ม Upload Work -->
         <form id="upload-form" action="{% url 'final' storybook.id %}" method="post" class="w-full sm:w-64">
             {% csrf_token %}
             <input type="hidden" name="questions_json" id="questions-json">
@@ -277,23 +264,33 @@
 
             el.innerHTML = `
                 <button class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-lg remove-btn" title="Remove">
-                  <i class="fas fa-trash-alt"></i>
+                <i class="fas fa-trash-alt"></i>
                 </button>
+
                 <div class="mb-4">
-                  <label class="text-sm font-medium text-gray-700 block mb-1">Question ${index + 1}</label>
-                  <input type="text" class="w-full border border-dashed border-gray-300 px-4 py-2 rounded-md" placeholder="Enter your question..." />
+                <label class="text-sm font-medium text-gray-700 block mb-1">Question ${index + 1}</label>
+                <input type="text" class="w-full border border-dashed border-gray-300 px-4 py-2 rounded-md" placeholder="Enter your question..." />
                 </div>
+
                 <div class="space-y-2">
-                  ${[1, 2, 3, 4].map(i => `
+                ${[1, 2, 3, 4].map(i => `
                     <label class="flex items-center gap-2 border border-dashed border-gray-300 px-4 py-2 rounded-md">
-                      <input type="radio" name="q-${index}" class="accent-blue-500" />
-                      <input type="text" class="w-full text-sm focus:outline-none" placeholder="Choice ${i}" />
+                    <input type="radio" name="q-${index}" class="accent-blue-500" />
+                    <input type="text" class="w-full text-sm focus:outline-none" placeholder="Choice ${i}" />
                     </label>
-                  `).join('')}
+                `).join('')}
+                </div>
+
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">คำอธิบายสำหรับคำตอบที่ถูกต้อง</label>
+                    <textarea class="w-full border border-dashed border-gray-300 px-4 py-2 rounded-md"
+                            placeholder="ใส่คำอธิบาย เช่น ทำไมข้อนี้ถึงถูก หรือหลักการที่ใช้ตอบ">
+                    </textarea>
                 </div>
             `;
             return el;
         }
+
 
         function refreshNumbers() {
             const items = container.querySelectorAll('.question-item');
@@ -370,7 +367,7 @@
     let currentAudioIndex = 0;
     let currentAudios = [];
     let isPlaying = false;
-    let isMuted = false;  // ✅ เริ่มต้น: เปิดเสียง
+    let isMuted = false;  // เริ่มต้น: เปิดเสียง
 
     const container = document.querySelector(".grid.grid-cols-2");
     const playerBtn = document.getElementById("player-toggle");
@@ -408,7 +405,7 @@
         iconSoundOn.classList.toggle('hidden', isMuted);
         iconSoundOff.classList.toggle('hidden', !isMuted);
 
-        applyMuteToCurrentAudios();  // ✅ Mute/unmute ทุกเสียงที่เล่นอยู่
+        applyMuteToCurrentAudios();  //Mute/unmute ทุกเสียงที่เล่นอยู่
     });
 
     async function playInOrder(audioLeft, audioRight) {
@@ -416,7 +413,7 @@
         const audioList = currentAudios;
 
         audioList.forEach(audio => {
-            audio.muted = isMuted;  // ✅ mute ก่อนเล่น
+            audio.muted = isMuted;  // mute ก่อนเล่น
         });
 
         for (let i = currentAudioIndex; i < audioList.length; i++) {
@@ -471,7 +468,7 @@
         });
 
         setTimeout(() => {
-            applyMuteToCurrentAudios();  // ✅ mute ตามสถานะปุ่ม
+            applyMuteToCurrentAudios();  // mute ตามสถานะปุ่ม
 
             if (isPlaying) {
                 const audioLeft = document.getElementById("scene-audio-0");
@@ -535,14 +532,5 @@
 
     updateLoadingMessage();
 </script>
-
-
-
-
-
-
-
-
-
 
 {% endblock %}

@@ -21,8 +21,6 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import ClassroomSerializer
 from django.contrib.auth.decorators import login_required
-# views.py
-# classroom/views.py
 
 
 from django.shortcuts import render, redirect
@@ -33,9 +31,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .forms import LessonUploadForm
 from .models import Lesson
-# views.py
 from django.shortcuts import render
-# classroom/views.py
+
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -49,7 +46,6 @@ from django.contrib.auth import get_backends
 from .models import Storybook
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
-# from .models import TeacherRegistry
 from .models import TeacherID
 from django.contrib.auth.decorators import user_passes_test
 
@@ -90,7 +86,7 @@ def upload_lesson_file(request, classroom_id):
         if form.is_valid():
             lesson = form.save(commit=False)
             lesson.user = request.user
-            lesson.classroom = classroom  # 🔹 เชื่อมกับ classroom
+            lesson.classroom = classroom  # เชื่อมกับ classroom
 
             uploaded_file = request.FILES['file']
             filename = uploaded_file.name.rsplit('.', 1)[0]
@@ -98,7 +94,7 @@ def upload_lesson_file(request, classroom_id):
             lesson.file = uploaded_file
             lesson.save()
 
-            # ✅ สร้าง Storybook ที่เชื่อมกับ lesson
+            # สร้าง Storybook ที่เชื่อมกับ lesson
             storybook = Storybook.objects.create(
                 user=request.user,
                 classroom=classroom,  # 🔹 เพิ่ม relation ถ้ามี field นี้
@@ -106,14 +102,14 @@ def upload_lesson_file(request, classroom_id):
                 file=lesson.file
             )
 
-            # ✅ เรียก Celery ทำงาน async
+            # เรียก Celery ทำงาน async
             process_storybook_async.delay(storybook.id)
 
-            # ✅ redirect ไปหน้า status หรือ classroom_home ก็ได้
+            # redirect ไปหน้า status หรือ classroom_home ก็ได้
             return redirect('detail_lesson', storybook_id=storybook.id)
 
         else:
-            print("❌ Form Errors:", form.errors)
+            print("Form Errors:", form.errors)
     else:
         form = LessonUploadForm()
 
@@ -123,37 +119,6 @@ def upload_lesson_file(request, classroom_id):
     })
 
 
-
-# @login_required
-# def storybook_status(request, storybook_id):
-#     storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
-#     return render(request, 'teacher/storybook_status.html', {'storybook': storybook})
-
-
-# @api_view(['GET'])
-# def storybook_status_check_api(request, storybook_id):
-#     storybook = get_object_or_404(Storybook, id=storybook_id)
-#     total_created = Scene.objects.filter(storybook=storybook).count()
-#     return Response({
-#         'is_ready': storybook.is_ready,
-#         'is_failed': storybook.is_failed,
-#         'current_scene': total_created,
-#         'total_scenes': 20
-#     })
-
-
-
-
-# @login_required
-# def teacher_view_storybook(request, storybook_id):
-#     storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
-
-#     scenes = storybook.scenes.order_by('scene_number')
-#     context = {
-#         'storybook': storybook,
-#         'scenes': json.dumps(list(scenes.values('scene_number', 'text', 'image_url', 'audio_url')), cls=DjangoJSONEncoder)
-#     }
-#     return render(request, 'teacher/detail_lesson.html', context)
 
 @login_required
 def teacher_view_storybook(request, storybook_id):
@@ -282,7 +247,13 @@ def detail_lesson_all(request, storybook_id):
         'scenes': scenes
     })
 
-
+def view_lesson_teacher(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id)
+    scenes = Scene.objects.filter(storybook=storybook)
+    return render(request, 'teacher/view_lesson_teacher.html', {
+        'storybook': storybook,
+        'scenes': scenes
+    })
 
 
 
@@ -329,7 +300,7 @@ def profile_settings_student(request):
         form = ProfileUpdateForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.save()
-            return redirect('profile_settings_student')  # ✅ redirect กลับมา path ของ student
+            return redirect('profile_settings_student')  # redirect กลับมา path ของ student
     else:
         form = ProfileUpdateForm(instance=user)
 
@@ -363,7 +334,7 @@ def profile_settings_admin(request):
         form = ProfileUpdateForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.save()
-            return redirect('profile_settings_admin')  # ✅ redirect กลับมา path ของ student
+            return redirect('profile_settings_admin')  # redirect กลับมา path ของ student
     else:
         form = ProfileUpdateForm(instance=user)
 
@@ -472,16 +443,6 @@ def auth_view(request):
                 login(request, user)
                 logger.info(f'User {user.email} logged in.')
 
-                # ✅ Redirect based on user_type
-                # if not user.user_type:
-                #     return redirect('select_role')
-                # elif user.user_type == 'teacher':
-                #     return redirect('classroom_created')
-                # elif user.user_type == 'student':
-                #     return redirect('courses_enroll')
-                # else:
-                #     return redirect('select_role')
-
                 if not user.user_type:
                     if user.is_superuser or user.is_staff:
                         user.user_type = 'admin'
@@ -490,7 +451,7 @@ def auth_view(request):
                 else:
                     return redirect('select_role')
 
-                # ✅ redirect ตาม user_type
+                # redirect ตาม user_type
                 if user.user_type == 'teacher':
                     return redirect('classroom_created')
                 elif user.user_type == 'student':
@@ -499,14 +460,14 @@ def auth_view(request):
                     return redirect('admin_lesson_dashboard')
 
             else:
-                logger.warning("❌ Failed login")
+                logger.warning("Failed login")
                 messages.error(request, 'เข้าสู่ระบบไม่สำเร็จ')
 
         elif action == 'register':
             form = SecureUserCreationForm(request.POST)
             if form.is_valid():
                 user = form.save(commit=False)
-                user.is_approved = True  # ✅ ไม่ต้องรออนุมัติ
+                user.is_approved = True  # ไม่ต้องรออนุมัติ
                 user.save()
                 
                 backend = get_backends()[0]
@@ -516,7 +477,7 @@ def auth_view(request):
                 logger.info(f'✅ New user registered: {user.email}')
                 return redirect('select_role')
             else:
-                print("❌ REGISTER FORM ERRORS:", form.errors)
+                print("REGISTER FORM ERRORS:", form.errors)
                 messages.error(request, 'เกิดข้อผิดพลาดในการสมัครสมาชิก')
 
     login_form = SecureAuthenticationForm()
@@ -556,34 +517,84 @@ def class_create_teacher(request):
     })
 
 
-
-# classroom/views.py
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from .models import Storybook
-
-@login_required
-def lesson_history_teacher(request):
-    if request.user.user_type != 'teacher':
-        return redirect('home')
-
-    all_storybooks = Storybook.objects.filter(user=request.user, is_uploaded=True).order_by('-created_at')
-
-    latest_storybooks = all_storybooks[:3]  # ✅ ดึง 3 บทเรียนล่าสุด
-    storybooks = all_storybooks[3:]         # ✅ ส่วนที่เหลือ
-
-    return render(request, 'teacher/lesson_history.html', {
-        'latest_storybooks': latest_storybooks,
-        'storybooks': storybooks
-    })
-
-
 from django.db.models import Avg
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
 from .models import Storybook, PostTestSubmission
 from collections import defaultdict
 from django.db.models import Count
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from .models import Storybook
+
+from django.shortcuts import render, get_object_or_404
+from .models import Storybook, PostTestSubmission, User
+
+
+
+
+from django.db.models import Q
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import Storybook
+
+from django.db.models import Q
+
+@login_required
+def lesson_history_teacher(request):
+    query = request.GET.get('q', '')
+
+    # ดึงบทเรียนของครูคนนี้ที่อัปโหลดแล้ว
+    storybooks_qs = Storybook.objects.filter(user=request.user, is_uploaded=True)
+
+    # ถ้ามีคำค้นหา ให้ค้นหาทั้งชื่อบทเรียน และชื่อห้องเรียน
+    if query:
+        storybooks_qs = storybooks_qs.filter(
+            Q(title__icontains=query) |
+            Q(classroom__name__icontains=query)  # ← ตรงนี้!
+        )
+
+    storybooks_qs = storybooks_qs.order_by('-created_at')
+
+    latest_storybooks = storybooks_qs[:3]
+    storybooks = storybooks_qs[3:]
+
+    return render(request, 'teacher/lesson_history.html', {
+        'latest_storybooks': latest_storybooks,
+        'storybooks': storybooks,
+        'query': query,
+    })
+
+
+
+@login_required
+def sidebar_context(request):
+    classrooms = Classroom.objects.filter(teacher=request.user, is_approved=True).order_by('name')
+    return render(request, 'teacher/base_teacher.html', {'classrooms': classrooms})
+
+@login_required
+def create_lesson_for_classroom(request, classroom_id):
+    classroom = get_object_or_404(Classroom, id=classroom_id, teacher=request.user)
+
+    if request.method == 'POST':
+        form = LessonUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            lesson = form.save(commit=False)
+            lesson.user = request.user
+            lesson.classroom = classroom
+            lesson.save()
+            return redirect('lesson_success')  # หรือ redirect ไปยัง lesson list
+    else:
+        form = LessonUploadForm()
+
+    return render(request, 'teacher/create_upload_image.html', {
+        'form': form,
+        'classroom': classroom
+    })
+
+
+
 
 @login_required
 def teacher_view_lesson_detail(request, storybook_id):
@@ -592,24 +603,24 @@ def teacher_view_lesson_detail(request, storybook_id):
     # ดึงเฉพาะ submission ทั้งหมดของ storybook นี้
     submissions = PostTestSubmission.objects.filter(storybook=storybook).select_related('user')
 
-    # ✅ นับจำนวนครั้งที่แต่ละ user ทำ
+    # นับจำนวนครั้งที่แต่ละ user ทำ
     submission_counts = defaultdict(int)
     for s in submissions:
         submission_counts[s.user_id] += 1
 
-    # ✅ เก็บเฉพาะ submission ล่าสุดของแต่ละ user (เพื่อใช้แสดงข้อมูล)
+    # เก็บเฉพาะ submission ล่าสุดของแต่ละ user (เพื่อใช้แสดงข้อมูล)
     latest_submissions = {}
     for s in submissions.order_by('-submitted_at'):
         if s.user_id not in latest_submissions:
             latest_submissions[s.user_id] = s
 
-    # ✅ เตรียมข้อมูล list สำหรับ template
+    # เตรียมข้อมูล list สำหรับ template
     students = []
     for user_id, latest_submission in latest_submissions.items():
         students.append({
             'user': latest_submission.user,
             'submitted_at': latest_submission.submitted_at,
-            'count': submission_counts[user_id],  # <== จำนวนครั้งที่ทำ
+            'count': submission_counts[user_id],  # จำนวนครั้งที่ทำ
         })
 
     total_submissions = submissions.count()
@@ -625,8 +636,7 @@ def teacher_view_lesson_detail(request, storybook_id):
     })
 
 
-from django.shortcuts import render, get_object_or_404
-from .models import Storybook, PostTestSubmission, User
+
 
 @login_required
 def student_posttest_history(request, storybook_id, user_id):
@@ -673,62 +683,36 @@ def dashboard_view(request):
         'classrooms': request.user.enrolled_classes.filter(is_approved=True) if request.user.user_type == 'student' else request.user.teaching_classes.filter(is_approved=True)
     })
 
-@login_required
-def admin_dashboard(request):
-    if request.user.user_type != 'admin':
-        messages.error(request, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้')
-        return redirect('class_join_create')
-    
-    pending_users = User.objects.filter(is_approved=False, user_type__in=['teacher', 'student'])
-    pending_requests = ClassroomRequest.objects.filter(status='pending')
-    
-    if request.method == 'POST':
-        action = request.POST.get('action')
-        
-        if action == 'approve_user':
-            user_id = request.POST.get('user_id')
-            user = get_object_or_404(User, id=user_id)
-            user.is_approved = True
-            user.save()
-            messages.success(request, f'อนุมัติบัญชี {user.email} แล้ว')
-        
-        elif action == 'approve_request':
-            request_id = request.POST.get('request_id')
-            classroom_request = get_object_or_404(ClassroomRequest, id=request_id)
-            classroom_request.status = 'approved'
-            classroom_request.reviewed_by = request.user
-            classroom_request.reviewed_at = timezone.now()
-            classroom_request.save()
-            messages.success(request, f'อนุมัติการสร้างชั้นเรียน {classroom_request.subject_name} แล้ว')
-    
-    return render(request, 'admin_dashboard.html', {
-        'pending_users': pending_users,
-        'pending_requests': pending_requests
-    })
+
 
 @login_required
 def create_classroom(request):
     if request.user.user_type != 'teacher':
-        messages.error(request, 'เฉพาะครูเท่านั้นที่สามารถสร้างชั้นเรียนได้')
+        messages.error(request, 'เฉพาะครูเท่านั้น')
         return redirect('classroom_created')
 
-    # ✅ ดึงชั้นเรียนที่ครูสร้างไว้แล้ว
-    classrooms = Classroom.objects.filter(teacher=request.user)
-
+    # ถ้ามี POST → สร้างห้องใหม่
     if request.method == 'POST':
-        subject_name = request.POST.get('subject_name')
-        if subject_name:
-            classroom = Classroom.objects.create(
-                name=subject_name,
+        name = request.POST.get('subject_name','').strip()
+        if name:
+            Classroom.objects.create(
+                name=name,
                 teacher=request.user,
-                is_approved=True  # ✅ อนุมัติทันที
+                is_approved=True
             )
-            messages.success(request, f'สร้างชั้นเรียน "{subject_name}" สำเร็จ')
-            return redirect('classroom_created')  # ✅ กลับมาหน้าเดิม
+            messages.success(request, f'สร้าง "{name}" สำเร็จ')
+        return redirect('classroom_created')
 
+    # GET: filter ด้วย q
+    q = request.GET.get('q','').strip()
+    qs = Classroom.objects.filter(teacher=request.user)
+    if q:
+        qs = qs.filter(name__icontains=q)
     return render(request, 'teacher/classroom_created.html', {
-        'classrooms': classrooms  # ✅ ส่งข้อมูลไปให้ template
+        'classrooms': qs,
+        'q': q,
     })
+
 
 
 
@@ -762,7 +746,7 @@ def join_classroom(request):
     
     return render(request, 'student/courses_enroll.html', {
         'form': form,
-        'classrooms': classrooms  # ✅ ส่งข้อมูลคลาสเข้าร่วมไปยัง template
+        'classrooms': classrooms  # ส่งข้อมูลคลาสเข้าร่วมไปยัง template
     })
 
 
@@ -776,7 +760,7 @@ def classroom_home(request, classroom_id):
         return redirect('class_join_create')
 
     if request.user == classroom.teacher:
-        # ✅ ครูเห็นทุก storybook ของตัวเองในคลาสนี้ (ทั้งที่อัปโหลดแล้ว/ยัง)
+        # ครูเห็นทุก storybook ของตัวเองในคลาสนี้ (ทั้งที่อัปโหลดแล้ว/ยัง)
         storybooks = classroom.storybooks.filter(user=request.user).order_by('-created_at')
         template_name = 'teacher/classroom_home.html'
     else:
@@ -791,6 +775,92 @@ def classroom_home(request, classroom_id):
 
 
 
+import io
+import os
+from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from django.conf import settings
+from xhtml2pdf import pisa
+from .models import Storybook
+
+def link_callback(uri, rel):
+    """
+    ให้ xhtml2pdf หาไฟล์ static และ media ถูกต้อง
+    """
+    if uri.startswith(settings.STATIC_URL):
+        path = os.path.join(settings.STATIC_ROOT, uri.replace(settings.STATIC_URL, ""))
+    elif uri.startswith(settings.MEDIA_URL):
+        path = os.path.join(settings.MEDIA_ROOT, uri.replace(settings.MEDIA_URL, ""))
+    else:
+        return uri
+    return path
+
+def export_lesson_pdf(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
+    # โหลดข้อมูล scenes มาเรียง
+    scenes = storybook.scenes.order_by('scene_number')
+    # เรนเดอร์เป็น HTML ด้วย template ใหม่
+    html = render_to_string('teacher/lesson_detail_for_pdf.html', {
+        'storybook': storybook,
+        'scenes': scenes,
+    }, request=request)
+
+    # สร้าง PDF ลงใน buffer
+    buffer = io.BytesIO()
+    pisa_status = pisa.CreatePDF(src=html, dest=buffer, link_callback=link_callback)
+    if pisa_status.err:
+        return HttpResponse('❌ เกิดข้อผิดพลาดในการสร้าง PDF', status=500)
+
+    buffer.seek(0)
+    return HttpResponse(
+        buffer,
+        content_type='application/pdf',
+        headers={
+            'Content-Disposition': f'attachment; filename="lesson_{storybook.id}.pdf"'
+        }
+    )
+
+
+
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
+from django.contrib import messages
+from django.shortcuts import render, redirect
+
+@login_required
+def delete_account(request):
+    if request.method == 'POST':
+        # เก็บ user, ล็อกเอาต์ และลบ user record
+        user = request.user
+        logout(request)
+        user.delete()
+        messages.success(request, 'ลบบัญชีของคุณเรียบร้อยแล้ว')
+        return redirect('home')  # เปลี่ยนเป็นชื่อ URL หน้าแรกของคุณ
+    return render(request, 'teacher/delete_account_confirm.html')
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+
+@login_required
+def delete_classroom(request, classroom_id):
+    # ดึงเฉพาะ classroom ที่ user เป็น teacher ผู้สร้าง
+    classroom = get_object_or_404(Classroom, id=classroom_id, teacher=request.user)
+    if request.method == 'POST':
+        classroom.delete()
+        messages.success(request, f'ลบชั้นเรียน "{classroom.name}" เรียบร้อยแล้ว')
+        return redirect('home')  # เปลี่ยนเป็นชื่อ URL ที่ต้องการกลับไป
+    # ถ้าเข้าด้วย GET ก็ redirect กลับ
+    return redirect('classroom_home', classroom_id=classroom_id)
+
+
+
+@login_required
+def license_view(request):
+    return render(request, 'teacher/license.html')  
+
 import json
 from django.contrib import messages
 from .models import Storybook, PostTestQuestion
@@ -800,20 +870,20 @@ def final(request, storybook_id):
     storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
 
     if request.method == 'POST':
-        # ✅ บันทึก download permission
+        # บันทึก download permission
         permission = request.POST.get('download_permission', 'public')
         storybook.download_permission = permission
 
-        # ✅ อัปเดตชื่อเรื่องใหม่ (กรณีมีแก้ไข)
+        # อัปเดตชื่อเรื่องใหม่ (กรณีมีแก้ไข)
         title = request.POST.get('title')
         if title:
             storybook.title = title
 
-        # ✅ ตั้งค่า is_uploaded
+        # ตั้งค่า is_uploaded
         storybook.is_uploaded = True
         storybook.save()
 
-        # ✅ ดึงข้อมูลคำถามแบบทดสอบ
+        # ดึงข้อมูลคำถามแบบทดสอบ
         questions_json = request.POST.get('questions_json')
         if questions_json:
             try:
@@ -827,7 +897,8 @@ def final(request, storybook_id):
                         choice_2=q['choices'][1],
                         choice_3=q['choices'][2],
                         choice_4=q['choices'][3],
-                        correct_choice=q['correct']
+                        correct_choice=q['correct'],
+                        explanation=q.get('explanation', '') 
                     )
             except Exception as e:
                 messages.error(request, f"เกิดข้อผิดพลาดในการบันทึกคำถาม: {str(e)}")
@@ -837,6 +908,100 @@ def final(request, storybook_id):
 
     return redirect('detail_lesson', storybook_id=storybook.id)
 
+from django import template
+register = template.Library()
+
+@register.filter
+def get_choice(question, index):
+    return getattr(question, f'choice_{index}', '')
+
+
+@login_required
+def edit_posttest(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
+    questions = PostTestQuestion.objects.filter(storybook=storybook)
+
+    if request.method == 'POST':
+        for q in questions:
+            q.question_text = request.POST.get(f'question_{q.id}')
+            q.choice_1 = request.POST.get(f'choice1_{q.id}')
+            q.choice_2 = request.POST.get(f'choice2_{q.id}')
+            q.choice_3 = request.POST.get(f'choice3_{q.id}')
+            q.choice_4 = request.POST.get(f'choice4_{q.id}')
+            q.correct_choice = int(request.POST.get(f'correct_{q.id}', 1))
+            q.explanation = request.POST.get(f'explanation_{q.id}')
+            q.save()
+        messages.success(request, "แก้ไขแบบทดสอบเรียบร้อยแล้ว")
+        return redirect('view_uploaded_lesson', storybook_id=storybook.id)
+
+    return render(request, 'teacher/edit_posttest.html', {
+        'storybook': storybook,
+        'questions': questions,
+    })
+
+
+@login_required
+def edit_lesson_detail(request, storybook_id):
+    storybook = get_object_or_404(Storybook, id=storybook_id, user=request.user)
+
+    # สร้าง Lesson ถ้ายังไม่มี
+    if not storybook.lesson:
+        # เลือก classroom จาก storybook โดยอิงกับครูผู้สร้าง
+        lesson = Lesson.objects.create(
+            user=storybook.user,
+            classroom=storybook.classroom,
+            title=storybook.title,
+            file=storybook.file
+        )
+        storybook.lesson = lesson
+        storybook.save()
+
+    lesson = storybook.lesson  # ตอนนี้จะไม่มีทางเป็น None แล้ว
+
+    if request.method == 'POST':
+        # อัปเดตรายละเอียด
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        classroom_id = request.POST.get('classroom_id')
+
+        if title:
+            storybook.title = title
+            lesson.title = title
+
+        if classroom_id:
+            classroom = Classroom.objects.filter(id=classroom_id).first()
+            if classroom:
+                storybook.classroom = classroom
+                lesson.classroom = classroom
+
+        storybook.save()
+        lesson.save()
+
+        messages.success(request, "แก้ไขรายละเอียดบทเรียนเรียบร้อยแล้ว")
+        return redirect('view_uploaded_lesson', storybook_id=storybook.id)
+
+    classrooms = Classroom.objects.filter(teacher=request.user)
+    return render(request, 'teacher/edit_lesson_detail.html', {
+        'storybook': storybook,
+        'lesson': lesson,
+        'classrooms': classrooms
+    })
+
+# classroom/views.py
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .models import Storybook
+
+@require_POST
+@login_required
+def delete_lesson(request):
+    storybook_id = request.POST.get('storybook_id')
+    try:
+        storybook = Storybook.objects.get(id=storybook_id, user=request.user)
+        storybook.delete()
+        return JsonResponse({'success': True})
+    except Storybook.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'บทเรียนไม่พบ'})
 
 
 # views.py
@@ -863,59 +1028,14 @@ def logout_view(request):
     messages.success(request, 'ออกจากระบบแล้ว')
     return redirect('auth_view')
 
-def upload_lesson_file_video(request):
-    if request.method == 'POST' and request.FILES.get('lesson_file'):
-        uploaded_file = request.FILES['lesson_file']
-        if uploaded_file.size > 10 * 1024 * 1024:  # > 10MB
-            return render(request, 'teacher/create_upload_video.html', {'error': 'File size must be under 10MB.'})
-        if not uploaded_file.name.lower().endswith(('.pdf')):
-            return render(request, 'teacher/create_upload_video.html', {'error': 'Invalid file format.'})
-        fs = FileSystemStorage()
-        fs.save(uploaded_file.name, uploaded_file)
-        return redirect('success_page')
-    return render(request, 'teacher/create_upload_video.html')
 
-
-def notifications_view(request):
-    notifications = [
-        {
-            'title': 'Update: Teacher Added A New Lesson In Science!',
-            'description': 'Exciting lesson details! Don’t forget to pass the post-lesson quizzes.',
-            'icon': 'fas fa-book-open',
-            'bg_color': 'bg-green-500',
-            'time': 'Just now'
-        },
-        {
-            'title': 'Take the Test: You\'ve Completed The Science Test',
-            'description': 'You did a great job. Keep the momentum going!',
-            'icon': 'fas fa-vial',
-            'bg_color': 'bg-purple-500',
-            'time': 'Just now'
-        },
-        {
-            'title': 'Download: Lesson Download Complete',
-            'description': 'Science lesson download complete.',
-            'icon': 'fas fa-download',
-            'bg_color': 'bg-orange-400',
-            'time': '7 hours ago'
-        },
-        {
-            'title': 'System Notification: Security Check Scheduled',
-            'description': 'Security check planned for Thursday at 2:00 PM.',
-            'icon': 'fas fa-shield-alt',
-            'bg_color': 'bg-red-300',
-            'time': 'Yesterday'
-        },
-        # เพิ่มอีกตามต้องการ
-    ]
-    return render(request, 'teacher/notifications.html', {'notifications': notifications})
 
 @login_required
 def delete_storybook(request, storybook_id):
     if request.method == 'POST':
         storybook = get_object_or_404(Storybook, id=storybook_id)
 
-        # ✅ ตรวจสอบสิทธิ์ (เฉพาะ admin หรือเจ้าของ)
+        # ตรวจสอบสิทธิ์ (เฉพาะ admin หรือเจ้าของ)
         if request.user.user_type == 'admin' or request.user == storybook.user:
             storybook.delete()
             messages.success(request, "ลบบทเรียนเรียบร้อยแล้ว")
@@ -924,21 +1044,6 @@ def delete_storybook(request, storybook_id):
 
     return redirect('admin_lesson_dashboard')
 
-# @login_required
-# def admin_lesson_dashboard(request):
-#     if request.user.user_type != 'admin':
-#         return redirect('select_role')  # class_join_createป้องกันคนอื่นเข้า
-
-#     total_users = User.objects.exclude(user_type='admin').count()
-#     total_storybooks = Storybook.objects.count()
-#     storybooks = Storybook.objects.select_related('classroom', 'user').order_by('-created_at')
-
-#     context = {
-#         'total_users': total_users,
-#         'total_storybooks': total_storybooks,
-#         'storybooks': storybooks
-#     }
-#     return render(request, 'admin/dashboard_lesson_admin.html', context)
 
 
 @login_required
@@ -974,7 +1079,7 @@ def add_teacher_registry_view(request):
         else:
             messages.error(request, "มีครูคนนี้อยู่แล้ว")
 
-    # ✅ ดึงรายชื่อครูทั้งหมดมาส่งไปให้ template
+    # ดึงรายชื่อครูทั้งหมดมาส่งไปให้ template
     registered_teachers = TeacherID.objects.all()
 
     return render(request, "admin/add_teacher_registry.html", {
@@ -1008,13 +1113,7 @@ def teacher_lesson_list_view(request, teacher_id):
     }
     return render(request, 'admin/teacher_lessons.html', context)
 
-# @login_required
-# @user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
-# def delete_teacher_lesson_view(request, lesson_id):
-#     lesson = get_object_or_404(Lesson, id=lesson_id)
-#     teacher_id = lesson.user.id
-#     lesson.delete()
-#     return redirect('teacher_lesson_list', teacher_id=teacher_id)
+
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
 def delete_teacher_storybook_view(request, storybook_id):
@@ -1030,24 +1129,8 @@ def delete_teacher_lesson_view(request, lesson_id):
     teacher_id = lesson.user.id
     lesson.delete()
     return redirect('teacher_storybooks_admin', teacher_id=teacher_id)
-# @login_required
-# @user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
-# def admin_view_lesson_detail(request, lesson_id):
-#     # lesson = get_object_or_404(Lesson, id=lesson_id)
-#     storybook = Storybook.objects.filter(lesson=lesson).first()
-#     scenes = storybook.scenes.order_by('scene_number')  
-#     # scenes = storybook.scenes.all() if storybook else []
 
-#     context = {
-#         'storybook': storybook,
-#         'scenes': scenes,
-#     }
-#     return render(request, 'admin/lesson_detail.html', context)
-    # return render(request, 'admin/lesson_detail.html', {
-    #     'lesson': lesson,
-    #     'storybook': storybook,
-    #     'scenes': scenes
-    # })
+
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')
 def admin_view_lesson_detail(request, storybook_id):
@@ -1069,15 +1152,7 @@ def teacher_storybooks_admin_view(request, teacher_id):
         'storybooks': storybooks,
     })
 
-# @login_required
-# @user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')  # หรือใช้ is_staff แล้วแต่สิทธิ์แอดมินของคุณ
-# def admin_reported_lessons_view(request):
-#     reports = Report.objects.select_related('storybook', 'user').order_by('-created_at')
-#     return render(request, 'admin/dashboard_lesson_admin.html', {
-#         'reports': reports,
-#         'total_users': User.objects.count(),
-#         'total_storybooks': Storybook.objects.count(),
-#     })
+
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.user_type == 'admin')

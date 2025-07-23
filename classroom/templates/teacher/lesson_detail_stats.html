@@ -25,23 +25,23 @@
 
             <div class="flex items-center gap-4 text-sm mt-2 text-gray-700">
                 <span>👥 {{ total_submissions }} คนทำแบบทดสอบ</span>
-                <span>⭐ 4.7 (750 รีวิว)</span>
             </div>
 
             <div class="flex flex-wrap gap-2 mt-3">
-                <a href="#"
+                <a href="{% url 'edit_posttest' storybook.id %}"
                     class="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded hover:bg-gray-200">
-                    <i class="fas fa-vial text-sm"></i><span>แบบทดสอบ</span>
+                    <i class="fas fa-vial text-sm"></i><span>เเก้ไขแบบทดสอบ</span>
                 </a>
-                <a href="{% url 'detail_lesson' storybook.id %}"
+                <a href="{% url 'edit_lesson_detail' storybook.id %}"
                     class="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded hover:bg-gray-200">
-                    <i class="fas fa-pen-to-square text-sm"></i><span>แก้ไข</span>
+                    <i class="fas fa-pen-to-square text-sm"></i><span>แก้ไขรายละเอียดบทเรียน</span>
                 </a>
-                <a href="{% url 'view_uploaded_lesson' storybook.id %}"
+                <a href="{% url 'view_lesson_teacher' storybook.id %}"
                     class="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded hover:bg-gray-200">
                     <i class="fas fa-eye text-sm"></i><span>ดูบทเรียน</span>
                 </a>
                 <a href="#"
+                    id="delete-button"
                     class="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded hover:bg-red-100 hover:text-red-700">
                     <i class="fas fa-trash-alt text-sm"></i><span>ลบบทเรียน</span>
                 </a>
@@ -139,4 +139,36 @@
     </div>
 
 </div>
+
+
+
+
+
+<script>
+document.getElementById('delete-button').addEventListener('click', function (e) {
+    e.preventDefault();
+    if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบบทเรียนนี้?')) {
+        fetch("{% url 'delete_lesson' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                'storybook_id': '{{ storybook.id }}'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('ลบบทเรียนสำเร็จ');
+                window.location.href = "{% url 'teacher_lesson_history' %}";
+            } else {
+                alert('เกิดข้อผิดพลาด: ' + data.error);
+            }
+        });
+    }
+});
+</script>
+
 {% endblock %}
