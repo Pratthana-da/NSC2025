@@ -36,3 +36,9 @@ Forbidden (CSRF token from POST incorrect.): /auth/
 User nsc@gmail.com logged out
 User teacher@ubu.ac.th logged in.
 User teacher@ubu.ac.th logged in.
+User tch01@gmail.com logged in.
+User tch01@gmail.com logged out
+User b.benzpratthana.34839@gmail.com logged out
+User tch01@gmail.com logged in.
+User tch01@gmail.com logged out
+❌ Failed login

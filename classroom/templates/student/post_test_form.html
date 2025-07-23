@@ -5,7 +5,7 @@
 
 <div class="bg-gradient-to-b from-white to-purple-50 min-h-screen flex items-center justify-center px-4 py-10">
 
-    <form method="post" id="quiz-form"
+    <form method="post" action="{% url 'take_post_test' storybook.id %}" id="quiz-form"
         class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-8 space-y-10 border border-purple-200">
         {% csrf_token %}
 
@@ -34,7 +34,7 @@
                 <div class="text-right">
                     <button type="button"
                         class="next-btn mt-4 px-6 py-2 bg-purple-600 text-white font-semibold rounded-full shadow hover:bg-purple-500 transition">
-                        ▶️ ถัดไป
+                        ถัดไป
                     </button>
                 </div>
             </div>
