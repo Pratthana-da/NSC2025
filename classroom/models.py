@@ -84,6 +84,7 @@ class Storybook(models.Model):
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name="storybooks", null=True, blank=True)
     title = models.CharField(max_length=255)
     file = models.FileField(upload_to='lessons/')
+    cover_image_url = models.URLField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_ready = models.BooleanField(default=False)
     is_failed = models.BooleanField(default=False)
